@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "home": "ホーム",
+    "blog": "ブログ",
+    "dashboard": "ダッシュボード",
+    "admin": "管理",
+    "login": "ログイン",
+    "register": "登録",
+    "logout": "ログアウト"
+  },
+  "hero": {
+    "subtitle": "CTF、サイバーセキュリティ、ネットワーク、システムを学び、実践し、共有するためのコミュニティ。",
+    "readBlog": "ブログを読む",
+    "joinTeam": "参加する",
+    "writeArticle": "記事を書く"
+  },
+  "auth": {
+    "email": "メール",
+    "password": "パスワード",
+    "remember": "ログイン状態を保持",
+    "forgot": "パスワードを忘れた",
+    "login": "ログイン",
+    "register": "アカウント作成",
+    "displayName": "表示名",
+    "confirmPassword": "パスワード確認",
+    "sendOtp": "OTP送信",
+    "verifyOtp": "OTP確認",
+    "otp": "OTPコード",
+    "success": "成功しました",
+    "error": "エラーが発生しました"
+  },
+  "blog": {
+    "title": "コミュニティブログ",
+    "search": "記事を検索",
+    "category": "カテゴリ",
+    "tag": "タグ",
+    "language": "言語",
+    "sort": "並び替え",
+    "latest": "最新",
+    "popular": "人気",
+    "readMore": "続きを読む",
+    "related": "関連記事",
+    "comments": "コメント"
+  },
+  "dashboard": {
+    "overview": "概要",
+    "myPosts": "自分の記事",
+    "newPost": "新規記事",
+    "drafts": "下書き",
+    "profile": "プロフィール",
+    "security": "セキュリティ",
+    "title": "タイトル",
+    "slug": "スラッグ",
+    "excerpt": "概要",
+    "content": "本文",
+    "cover": "カバー画像",
+    "category": "カテゴリ",
+    "tags": "タグ",
+    "language": "言語",
+    "difficulty": "難易度",
+    "topicType": "トピック",
+    "status": "状態",
+    "save": "保存"
+  },
+  "footer": {
+    "line": "Share knowledge, support beginners, build labs, write notes, and grow together.",
+    "copyright": "All rights reserved."
+  }
+}

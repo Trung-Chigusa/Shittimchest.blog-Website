@@ -1,0 +1,8 @@
+<svg width="1200" height="675" viewBox="0 0 1200 675" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SOC cover">
+  <rect width="1200" height="675" fill="#050814"/>
+  <path d="M600 95a242 242 0 1 0 0 484 242 242 0 0 0 0-484Zm0 75a167 167 0 1 1 0 334 167 167 0 0 1 0-334Z" fill="#38f4ff" fill-opacity=".12"/>
+  <path d="M600 80v520M340 338h520" stroke="#38f4ff" stroke-opacity=".35" stroke-width="3"/>
+  <text x="95" y="140" fill="#38f4ff" font-family="monospace" font-size="54" font-weight="700">BLUE TEAM / SOC</text>
+  <text x="95" y="206" fill="#dbeafe" font-family="monospace" font-size="28">signals · detections · response</text>
+  <circle cx="600" cy="338" r="22" fill="#ff4fd8"/>
+</svg>

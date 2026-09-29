@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "home": "Trang chủ",
+    "blog": "Blog",
+    "dashboard": "Dashboard",
+    "admin": "Admin",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "logout": "Đăng xuất"
+  },
+  "hero": {
+    "subtitle": "Cộng đồng CTF, bảo mật thông tin, mạng và hệ thống dành cho những người thích học thật, làm thật và chia sẻ thật.",
+    "readBlog": "Đọc Blog",
+    "joinTeam": "Tham gia",
+    "writeArticle": "Viết bài"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Mật khẩu",
+    "remember": "Ghi nhớ",
+    "forgot": "Quên mật khẩu",
+    "login": "Đăng nhập",
+    "register": "Tạo tài khoản",
+    "displayName": "Tên hiển thị",
+    "confirmPassword": "Nhập lại mật khẩu",
+    "sendOtp": "Gửi OTP",
+    "verifyOtp": "Xác thực OTP",
+    "otp": "Mã OTP",
+    "success": "Thành công",
+    "error": "Có lỗi xảy ra"
+  },
+  "blog": {
+    "title": "Blog cộng đồng",
+    "search": "Tìm bài viết",
+    "category": "Danh mục",
+    "tag": "Tag",
+    "language": "Ngôn ngữ",
+    "sort": "Sắp xếp",
+    "latest": "Mới nhất",
+    "popular": "Phổ biến",
+    "readMore": "Đọc tiếp",
+    "related": "Bài liên quan",
+    "comments": "Bình luận"
+  },
+  "dashboard": {
+    "overview": "Tổng quan",
+    "myPosts": "Bài viết của tôi",
+    "newPost": "Bài mới",
+    "drafts": "Bản nháp",
+    "profile": "Hồ sơ",
+    "security": "Bảo mật",
+    "title": "Tiêu đề",
+    "slug": "Slug",
+    "excerpt": "Tóm tắt",
+    "content": "Nội dung",
+    "cover": "Ảnh cover",
+    "category": "Danh mục",
+    "tags": "Tags",
+    "language": "Ngôn ngữ",
+    "difficulty": "Độ khó",
+    "topicType": "Chủ đề",
+    "status": "Trạng thái",
+    "save": "Lưu bài"
+  },
+  "footer": {
+    "line": "Share knowledge, support beginners, build labs, write notes, and grow together.",
+    "copyright": "Tất cả quyền được bảo lưu."
+  }
+}

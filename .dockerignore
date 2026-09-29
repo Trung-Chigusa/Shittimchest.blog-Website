@@ -1,0 +1,10 @@
+node_modules
+.next
+.env
+.git
+npm-debug.log
+Dockerfile
+docker-compose.yml
+README.md
+SECURITY_CHECKLIST.md
+tests
