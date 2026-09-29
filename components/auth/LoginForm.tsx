@@ -1,86 +1,99 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, LogIn } from "lucide-react";
-import { useState } from "react";
+import { AlertCircle, Loader2, LogIn } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
+import { authSchemas } from "@/components/auth/auth-schemas";
+import { Field, PasswordInput } from "@/components/auth/Field";
+import { useI18n } from "@/components/providers/I18nProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { loginSchema } from "@/lib/validators";
+import { apiRequest, errorMessage } from "@/lib/client-api";
 
-type LoginInput = z.input<typeof loginSchema>;
-type LoginValues = z.output<typeof loginSchema>;
-
-async function csrfToken() {
-  const response = await fetch("/api/auth/csrf", { credentials: "include" });
-  const json = await response.json();
-  return json.data.token as string;
+/** Only allow same-site, same-locale redirects after sign-in. */
+export function safeNext(next: string | null, locale: string) {
+  return next && next.startsWith(`/${locale}/`) && !next.startsWith("//") ? next : `/${locale}/dashboard`;
 }
 
-export function LoginForm({ locale, labels }: { locale: string; labels: Record<string, string> }) {
+export function LoginForm() {
+  const { locale, t } = useI18n();
   const router = useRouter();
+  const params = useSearchParams();
+  const toast = useToast();
   const [message, setMessage] = useState("");
+  const schema = useMemo(() => authSchemas(t).login, [t]);
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginInput, unknown, LoginValues>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
     defaultValues: { email: "", password: "", remember: true },
   });
-  const loginPlaceholder =
-    locale === "vi" ? "Email hoặc tên đăng nhập" : locale === "ja" ? "メールまたはユーザー名" : "Email or username";
 
-  async function onSubmit(values: LoginValues) {
+  async function onSubmit(values: z.infer<typeof schema>) {
     setMessage("");
-    const token = await csrfToken();
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      credentials: "include",
-      headers: { "content-type": "application/json", "x-csrf-token": token },
-      body: JSON.stringify(values),
-    });
-    const json = await response.json();
-    if (!json.success) {
-      setMessage(json.message);
-      return;
+    try {
+      await apiRequest("/api/auth/login", { json: values });
+      toast(t.auth.welcomeBack, "success");
+      router.push(safeNext(params.get("next"), locale));
+      router.refresh();
+    } catch (error) {
+      setMessage(errorMessage(error, t));
     }
-    router.push(`/${locale}/dashboard`);
-    router.refresh();
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <Input type="text" placeholder={loginPlaceholder} autoComplete="username" {...register("email")} />
-        {errors.email ? <p className="mt-1 text-xs text-red-200">{errors.email.message}</p> : null}
-      </div>
-      <div>
-        <Input type="password" placeholder={labels.password} autoComplete="current-password" {...register("password")} />
-        {errors.password ? <p className="mt-1 text-xs text-red-200">{errors.password.message}</p> : null}
-      </div>
-      <div className="flex items-center justify-between gap-3 text-sm text-slate-300">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" className="h-4 w-4 accent-cyan-300" {...register("remember")} />
-          {labels.remember}
-        </label>
-        <Link className="text-cyan-200 hover:text-white" href={`/${locale}/register`}>
-          {labels.forgot}
-        </Link>
-      </div>
-      {message ? <p className="rounded-md border border-red-200/20 bg-red-500/10 px-3 py-2 text-sm text-red-100">{message}</p> : null}
-      <Button className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-        {labels.login}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+      {message ? (
+        <div role="alert" className="flex items-start gap-2.5 rounded-xl border border-danger/25 bg-danger/10 px-3.5 py-3 text-sm text-danger">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          {message}
+        </div>
+      ) : null}
+      <Field id="email" label={t.auth.email} error={errors.email?.message}>
+        <Input
+          id="email"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          autoFocus
+          placeholder={t.auth.emailPlaceholder}
+          aria-invalid={Boolean(errors.email)}
+          {...register("email")}
+        />
+      </Field>
+      <Field
+        id="password"
+        label={t.auth.password}
+        error={errors.password?.message}
+        action={
+          <Link href={`/${locale}/forgot-password`} className="text-xs font-semibold text-primary hover:underline">
+            {t.auth.forgot}
+          </Link>
+        }
+      >
+        <PasswordInput
+          id="password"
+          autoComplete="current-password"
+          placeholder={t.auth.passwordPlaceholder}
+          aria-invalid={Boolean(errors.password)}
+          {...register("password")}
+        />
+      </Field>
+      <label className="flex cursor-pointer select-none items-center gap-2.5 text-sm text-muted">
+        <input type="checkbox" className="h-4 w-4 rounded accent-[rgb(var(--primary))]" {...register("remember")} />
+        {t.auth.remember}
+      </label>
+      <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? <Loader2 className="animate-spin" /> : <LogIn />}
+        {t.auth.login}
       </Button>
-      <p className="text-center text-sm text-slate-400">
-        <Link className="text-cyan-200 hover:text-white" href={`/${locale}/register`}>
-          {labels.register}
-        </Link>
-      </p>
     </form>
   );
 }

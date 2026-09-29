@@ -1,53 +1,68 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Send } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
+import { useI18n } from "@/components/providers/I18nProvider";
+import { useToast } from "@/components/providers/ToastProvider";
+import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
-import { Textarea } from "@/components/ui/Textarea";
+import { apiRequest, errorMessage } from "@/lib/client-api";
 
-async function csrfToken() {
-  const response = await fetch("/api/auth/csrf", { credentials: "include" });
-  const json = await response.json();
-  return json.data.token as string;
-}
+const MAX = 1200;
 
-export function CommentBox({ postId }: { postId: string }) {
+export function CommentBox({ postId, userName }: { postId: string; userName: string }) {
+  const { t } = useI18n();
+  const toast = useToast();
+  const router = useRouter();
   const [content, setContent] = useState("");
-  const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
 
-  async function submit() {
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!content.trim()) return;
     setPending(true);
-    setMessage("");
     try {
-      const token = await csrfToken();
-      const response = await fetch("/api/comments", {
-        method: "POST",
-        credentials: "include",
-        headers: { "content-type": "application/json", "x-csrf-token": token },
-        body: JSON.stringify({ postId, content }),
-      });
-      const json = await response.json();
-      if (!json.success) throw new Error(json.message);
+      await apiRequest("/api/comments", { json: { postId, content } });
       setContent("");
-      setMessage("Comment posted.");
+      toast(t.blog.commentPosted, "success");
+      router.refresh(); // re-render the server list so the new comment shows up
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to post comment.");
+      toast(errorMessage(error, t), "error");
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <div className="glass-panel p-4">
-      <Textarea value={content} onChange={(event) => setContent(event.target.value)} placeholder="Share a careful note..." />
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <p className="text-sm text-slate-400">{message}</p>
-        <Button onClick={submit} disabled={pending || !content.trim()} type="button">
-          <Send className="h-4 w-4" />
-          Send
-        </Button>
+    <form onSubmit={submit} className="flex gap-3">
+      <Avatar name={userName} size="md" className="hidden sm:grid" />
+      <div className="flex-1 rounded-2xl border border-line bg-surface shadow-sm transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/15">
+        <label htmlFor="comment" className="sr-only">
+          {t.blog.comments}
+        </label>
+        <textarea
+          id="comment"
+          value={content}
+          maxLength={MAX}
+          onChange={(event) => setContent(event.target.value)}
+          onKeyDown={(event) => {
+            if ((event.ctrlKey || event.metaKey) && event.key === "Enter") submit(event);
+          }}
+          placeholder={t.blog.commentPlaceholder}
+          rows={3}
+          className="block w-full resize-y rounded-t-2xl bg-transparent px-4 pt-3.5 text-sm leading-relaxed text-fg outline-none placeholder:text-subtle"
+        />
+        <div className="flex items-center justify-between gap-3 px-3 pb-3">
+          <span className="text-xs tabular-nums text-subtle">
+            {content.length}/{MAX}
+          </span>
+          <Button type="submit" size="sm" disabled={pending || !content.trim()}>
+            {pending ? <Loader2 className="animate-spin" /> : <Send />}
+            {t.blog.commentSend}
+          </Button>
+        </div>
       </div>
-    </div>
+    </form>
   );
 }

@@ -1,120 +1,275 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Badge } from "@/components/ui/Badge";
+import { cache } from "react";
+import { ArrowLeft, Calendar, Clock, Eye, EyeOff, MessageSquare } from "lucide-react";
 import { CommentBox } from "@/components/blog/CommentBox";
 import { LikeBookmarkButtons } from "@/components/blog/LikeBookmarkButtons";
 import { MarkdownRenderer } from "@/components/blog/MarkdownRenderer";
-import { PostCard } from "@/components/blog/PostCard";
-import { prisma } from "@/lib/db";
+import { PostCard, PostCover } from "@/components/blog/PostCard";
+import { ReadingProgress } from "@/components/blog/ReadingProgress";
+import { TableOfContents } from "@/components/blog/TableOfContents";
+import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
+import { buttonClasses } from "@/components/ui/Button";
 import { getCurrentUserFromCookies } from "@/lib/auth";
-import { canModerate } from "@/lib/permissions";
-import { formatDate, readingTime } from "@/lib/utils";
+import { prisma } from "@/lib/db";
+import { fmt, formatDate, formatRelative, getDictionary } from "@/lib/i18n";
+import { canEditPost, canModerate } from "@/lib/permissions";
+import { extractHeadings, readingTime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-export default async function BlogDetailPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
-  const { locale, slug } = await params;
-  const user = await getCurrentUserFromCookies();
-  const canPreviewUnpublished = user ? canModerate(user) : false;
-
-  const post = await prisma.post.findFirst({
-    where: canPreviewUnpublished ? { slug } : { slug, status: "PUBLISHED" },
+const getPost = cache(async (slug: string) =>
+  prisma.post.findUnique({
+    where: { slug },
     include: {
-      author: { select: { displayName: true, avatarUrl: true, bio: true } },
-      category: { select: { id: true, name: true, slug: true } },
+      author: { select: { id: true, displayName: true, avatarUrl: true, bio: true } },
+      category: { select: { id: true, name: true, slug: true, icon: true } },
       tags: { include: { tag: true } },
       comments: {
         where: { status: "VISIBLE" },
         orderBy: { createdAt: "desc" },
-        include: { author: { select: { displayName: true } } },
-        take: 20,
+        include: { author: { select: { displayName: true, avatarUrl: true } } },
+        take: 50,
       },
+      _count: { select: { likes: true, comments: { where: { status: "VISIBLE" } } } },
     },
-  });
+  }),
+);
 
-  if (!post) notFound();
-
-  if (post.status === "PUBLISHED") {
-    await prisma.post.update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } });
-  }
-  const displayedViewCount = post.status === "PUBLISHED" ? post.viewCount + 1 : post.viewCount;
-
-  const related = await prisma.post.findMany({
-    where: { status: "PUBLISHED", categoryId: post.categoryId, id: { not: post.id } },
-    include: {
-      author: { select: { displayName: true } },
-      category: { select: { name: true, slug: true } },
-      tags: { include: { tag: true } },
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPost(slug);
+  if (!post || post.status !== "PUBLISHED") return {};
+  const title = post.seoTitle || post.title;
+  const description = post.seoDescription || post.excerpt;
+  return {
+    title,
+    description,
+    openGraph: {
+      type: "article",
+      title,
+      description,
+      publishedTime: post.publishedAt?.toISOString(),
+      images: post.coverImage ? [post.coverImage] : undefined,
     },
-    take: 3,
-    orderBy: { publishedAt: "desc" },
-  });
+  };
+}
 
-  const headings = post.content
-    .split("\n")
-    .filter((line) => /^#{2,3}\s/.test(line))
-    .map((line) => line.replace(/^#{2,3}\s/, "").trim())
-    .slice(0, 8);
+export default async function BlogDetailPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
+  const { locale, slug } = await params;
+  const t = getDictionary(locale);
+  const [post, user] = await Promise.all([getPost(slug), getCurrentUserFromCookies()]);
+
+  // Unpublished posts are visible to their author and to moderators only.
+  const isPublished = post?.status === "PUBLISHED";
+  if (!post || (!isPublished && !(user && (canModerate(user) || post.authorId === user.id)))) notFound();
+
+  const [related, reactions] = await Promise.all([
+    prisma.post.findMany({
+      where: { status: "PUBLISHED", categoryId: post.categoryId, id: { not: post.id } },
+      include: {
+        author: { select: { displayName: true, avatarUrl: true } },
+        category: { select: { name: true, slug: true, icon: true } },
+        tags: { include: { tag: true } },
+      },
+      take: 3,
+      orderBy: { publishedAt: "desc" },
+    }),
+    user
+      ? Promise.all([
+          prisma.like.findUnique({ where: { postId_userId: { postId: post.id, userId: user.id } }, select: { id: true } }),
+          prisma.bookmark.findUnique({ where: { postId_userId: { postId: post.id, userId: user.id } }, select: { id: true } }),
+        ])
+      : Promise.resolve([null, null] as const),
+    isPublished ? prisma.post.update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } }) : null,
+  ]);
+
+  const [liked, bookmarked] = reactions;
+  const views = post.viewCount + (isPublished ? 1 : 0);
+  const headings = extractHeadings(post.content);
+  const minutes = readingTime(post.content);
+  const canEdit = user ? canEditPost(user, post) : false;
 
   return (
-    <main className="section-shell grid gap-8 py-10 lg:grid-cols-[minmax(0,1fr)_280px]">
-      <article className="space-y-6">
-        <div className="overflow-hidden rounded-md border border-white/10 bg-slate-950/45">
-          {post.coverImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.coverImage} alt="" className="aspect-[21/9] w-full object-cover" />
-          ) : null}
-          <div className="p-6 sm:p-8">
-            <div className="flex flex-wrap gap-2">
-              <Badge>{post.category.name}</Badge>
-              <Badge className="border-violet-200/25 bg-violet-200/10 text-violet-100">{post.language.toUpperCase()}</Badge>
-              {post.tags.map(({ tag }) => (
-                <Badge key={tag.id} className="border-white/10 bg-white/5 text-slate-200">
-                  #{tag.name}
-                </Badge>
-              ))}
-            </div>
-            <h1 className="mt-5 text-4xl font-black text-white sm:text-5xl">{post.title}</h1>
-            <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-300">{post.excerpt}</p>
-            <p className="mt-5 text-sm text-slate-400">
-              {post.author.displayName} · {formatDate(post.publishedAt)} · {readingTime(post.content)} min read · {displayedViewCount} views
-            </p>
+    <main className="pb-8">
+      <ReadingProgress targetId="article-body" />
+
+      {!isPublished ? (
+        <div className="border-b border-warning/30 bg-warning/10">
+          <p className="container-page flex items-center gap-2 py-3 text-sm font-medium text-warning">
+            <EyeOff className="h-4 w-4 shrink-0" />
+            {fmt(t.blog.previewNotice, { status: t.status[post.status] })}
+          </p>
+        </div>
+      ) : null}
+
+      <div className="container-page pt-10 sm:pt-14">
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_14rem]">
+        <div className="min-w-0">
+        <header className="max-w-3xl">
+          <nav className="flex items-center gap-2 text-sm text-subtle" aria-label="Breadcrumb">
+            <Link href={`/${locale}/blog`} className="inline-flex items-center gap-1.5 font-medium hover:text-primary">
+              <ArrowLeft className="h-4 w-4" />
+              {t.blog.backToBlog}
+            </Link>
+            <span aria-hidden="true">/</span>
+            <Link href={`/${locale}/blog?category=${post.category.slug}`} className="truncate hover:text-primary">
+              {post.category.name}
+            </Link>
+          </nav>
+
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Badge>{t.topicType[post.topicType]}</Badge>
+            <Badge tone="halo">{t.difficulty[post.difficulty]}</Badge>
+            <Badge tone="neutral" className="uppercase">
+              {post.language}
+            </Badge>
+          </div>
+          <h1 className="mt-5 text-3xl font-extrabold leading-[1.25] sm:text-4xl sm:leading-[1.22] lg:text-[2.6rem]">{post.title}</h1>
+          {post.excerpt ? <p className="mt-5 text-lg leading-relaxed text-muted">{post.excerpt}</p> : null}
+
+          <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3 border-y border-line py-4 text-sm text-subtle">
+            <span className="flex items-center gap-2.5">
+              <Avatar name={post.author.displayName} src={post.author.avatarUrl} size="md" />
+              <span className="font-semibold text-fg">{post.author.displayName}</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4" />
+              <time dateTime={(post.publishedAt ?? post.createdAt).toISOString()}>{formatDate(post.publishedAt ?? post.createdAt, locale)}</time>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock className="h-4 w-4" />
+              {fmt(t.common.minRead, { n: minutes })}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Eye className="h-4 w-4" />
+              {fmt(t.common.views, { n: views })}
+            </span>
+            {canEdit ? (
+              <Link
+                href={`/${locale}/dashboard?tab=editor&edit=${encodeURIComponent(post.slug)}`}
+                className={buttonClasses({ size: "sm", variant: "secondary", className: "ml-auto" })}
+              >
+                {t.common.edit}
+              </Link>
+            ) : null}
+          </div>
+        </header>
+
+        {/* A real cover gets a cinematic frame; the generated fallback stays a slim banner. */}
+        <div className="mt-10 overflow-hidden rounded-3xl border border-line shadow-card">
+          <div className={post.coverImage ? "aspect-[2/1] sm:aspect-[21/9]" : "aspect-[3/1] sm:aspect-[5/1]"}>
+            <PostCover post={post} iconClassName={post.coverImage ? undefined : "h-14 w-14"} />
           </div>
         </div>
-        <div className="glass-panel p-5 sm:p-8">
-          <MarkdownRenderer content={post.content} />
-        </div>
-        <LikeBookmarkButtons postId={post.id} />
-        <section className="space-y-4">
-          <h2 className="text-2xl font-semibold text-white">Comments</h2>
-          {user ? <CommentBox postId={post.id} /> : <p className="glass-panel p-4 text-slate-400">Login to comment, like, or bookmark.</p>}
-          <div className="space-y-3">
-            {post.comments.map((comment) => (
-              <div key={comment.id} className="rounded-md border border-white/10 bg-slate-950/45 p-4">
-                <p className="font-medium text-white">{comment.author.displayName}</p>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-300">{comment.content}</p>
+
+          <article id="article-body" className="mt-12 w-full min-w-0 max-w-3xl">
+            {headings.length ? (
+              <details className="card mb-8 p-4 lg:hidden">
+                <summary className="cursor-pointer text-sm font-semibold text-fg">{t.blog.toc}</summary>
+                <div className="mt-4">
+                  <TableOfContents headings={headings} title={t.blog.toc} />
+                </div>
+              </details>
+            ) : null}
+
+            <MarkdownRenderer content={post.content} />
+
+            {post.tags.length ? (
+              <div className="mt-12 flex flex-wrap gap-2">
+                {post.tags.map(({ tag }) => (
+                  <Link
+                    key={tag.id}
+                    href={`/${locale}/blog?tag=${tag.slug}`}
+                    className="rounded-full bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:bg-primary-soft hover:text-primary"
+                  >
+                    #{tag.name}
+                  </Link>
+                ))}
               </div>
+            ) : null}
+
+            <div className="mt-8 border-t border-line pt-8">
+              <LikeBookmarkButtons
+                postId={post.id}
+                signedIn={Boolean(user)}
+                initialLiked={Boolean(liked)}
+                initialBookmarked={Boolean(bookmarked)}
+                likeCount={post._count.likes}
+              />
+            </div>
+
+            <div className="card mt-10 flex gap-4 p-6">
+              <Avatar name={post.author.displayName} src={post.author.avatarUrl} size="lg" />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-subtle">{t.blog.writtenBy}</p>
+                <p className="mt-1 font-display text-lg font-bold text-fg">{post.author.displayName}</p>
+                {post.author.bio ? <p className="mt-1.5 text-sm leading-relaxed text-muted">{post.author.bio}</p> : null}
+              </div>
+            </div>
+
+            <section className="mt-14" aria-labelledby="comments-title">
+              <h2 id="comments-title" className="flex items-center gap-2 text-2xl font-bold">
+                <MessageSquare className="h-6 w-6 text-primary" />
+                {t.blog.comments}
+                <span className="text-lg font-semibold text-subtle">({post._count.comments})</span>
+              </h2>
+              <div className="mt-6">
+                {user && isPublished ? (
+                  <CommentBox postId={post.id} userName={user.displayName} />
+                ) : !user ? (
+                  <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-dashed border-line p-5">
+                    <p className="text-sm text-muted">{t.blog.loginToComment}</p>
+                    <Link href={`/${locale}/login`} className={buttonClasses({ size: "sm" })}>
+                      {t.nav.login}
+                    </Link>
+                  </div>
+                ) : null}
+              </div>
+              <ul className="mt-8 space-y-6">
+                {post.comments.length ? (
+                  post.comments.map((comment) => (
+                    <li key={comment.id} className="flex gap-3">
+                      <Avatar name={comment.author.displayName} src={comment.author.avatarUrl} size="md" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-baseline gap-x-2">
+                          <span className="font-semibold text-fg">{comment.author.displayName}</span>
+                          <time className="text-xs text-subtle" dateTime={comment.createdAt.toISOString()}>
+                            {formatRelative(comment.createdAt, locale)}
+                          </time>
+                        </div>
+                        <p className="mt-1.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-fg/85">{comment.content}</p>
+                      </div>
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-sm text-subtle">{t.blog.noComments}</li>
+                )}
+              </ul>
+            </section>
+          </article>
+        </div>
+
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 pt-2">
+            <TableOfContents headings={headings} title={t.blog.toc} />
+          </div>
+        </aside>
+        </div>
+      </div>
+
+      {related.length ? (
+        <section className="container-page mt-20 border-t border-line pt-14">
+          <h2 className="text-2xl font-bold">{t.blog.related}</h2>
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {related.map((item) => (
+              <PostCard key={item.id} locale={locale} post={item} />
             ))}
           </div>
         </section>
-        {related.length ? (
-          <section>
-            <h2 className="text-2xl font-semibold text-white">Related posts</h2>
-            <div className="mt-5 grid gap-5 md:grid-cols-3">
-              {related.map((item) => (
-                <PostCard key={item.id} locale={locale} post={item} />
-              ))}
-            </div>
-          </section>
-        ) : null}
-      </article>
-      <aside className="space-y-4">
-        <div className="glass-panel sticky top-24 p-5">
-          <p className="cyber-label">Table of contents</p>
-          <div className="mt-4 space-y-2">
-            {headings.length ? headings.map((heading) => <p key={heading} className="text-sm text-slate-300">{heading}</p>) : <p className="text-sm text-slate-500">No headings yet.</p>}
-          </div>
-        </div>
-      </aside>
+      ) : null}
     </main>
   );
 }

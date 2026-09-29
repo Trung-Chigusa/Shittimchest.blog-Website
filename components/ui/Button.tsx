@@ -1,34 +1,46 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "soft";
+type ButtonSize = "sm" | "md" | "lg" | "icon";
 
 const variants: Record<ButtonVariant, string> = {
-  primary:
-    "border-cyan-300/50 bg-cyan-300 text-slate-950 shadow-glow hover:bg-white focus-visible:ring-cyan-200",
-  secondary:
-    "border-white/15 bg-white/10 text-white hover:border-cyan-200/60 hover:bg-cyan-200/10 focus-visible:ring-cyan-200",
-  ghost:
-    "border-transparent bg-transparent text-slate-200 hover:bg-white/8 hover:text-white focus-visible:ring-cyan-200",
-  danger:
-    "border-red-300/40 bg-red-500/20 text-red-100 hover:bg-red-500/30 focus-visible:ring-red-200",
+  primary: "bg-primary text-primary-fg shadow-sm hover:bg-primary/90 hover:shadow-glow",
+  secondary: "border border-line bg-surface text-fg shadow-sm hover:border-primary/40 hover:bg-surface-2",
+  soft: "bg-primary-soft text-primary hover:bg-primary/15",
+  ghost: "text-muted hover:bg-surface-2 hover:text-fg",
+  danger: "bg-danger/10 text-danger hover:bg-danger hover:text-white",
 };
+
+const sizes: Record<ButtonSize, string> = {
+  sm: "h-8 gap-1.5 rounded-lg px-3 text-xs",
+  md: "h-10 gap-2 rounded-xl px-4 text-sm",
+  lg: "h-12 gap-2 rounded-xl px-6 text-[0.9375rem]",
+  icon: "h-9 w-9 rounded-lg",
+};
+
+/** Shared classes so links can look like buttons without nesting <button> in <a>. */
+export function buttonClasses({
+  variant = "primary",
+  size = "md",
+  className,
+}: { variant?: ButtonVariant; size?: ButtonSize; className?: string } = {}) {
+  return cn(
+    "inline-flex shrink-0 items-center justify-center whitespace-nowrap font-semibold transition duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0",
+    variants[variant],
+    sizes[size],
+    className,
+  );
+}
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
+  size?: ButtonSize;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", ...props }, ref) => (
-    <button
-      ref={ref}
-      className={cn(
-        "inline-flex h-11 items-center justify-center gap-2 rounded-md border px-4 text-sm font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-55",
-        variants[variant],
-        className,
-      )}
-      {...props}
-    />
+  ({ className, variant, size, type = "button", ...props }, ref) => (
+    <button ref={ref} type={type} className={buttonClasses({ variant, size, className })} {...props} />
   ),
 );
 

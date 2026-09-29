@@ -27,7 +27,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next();
+  // Let the root layout set <html lang> for the active locale.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-locale", first);
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {

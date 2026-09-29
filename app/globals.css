@@ -2,62 +2,294 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens. Values are RGB channels so Tailwind can apply opacity
+ * (e.g. bg-primary/10). Light is the base; .dark overrides.
+ */
 :root {
-  --background: #050814;
-  --foreground: #e6f6ff;
+  --bg: 246 248 252;
+  --surface: 255 255 255;
+  --surface-2: 240 244 250;
+  --line: 223 229 239;
+  --fg: 13 20 38;
+  --muted: 71 84 110;
+  --subtle: 110 124 150;
+  --primary: 18 112 232;
+  --primary-fg: 255 255 255;
+  --primary-soft: 228 239 255;
+  --accent: 14 165 233;
+  --halo: 236 72 153;
+  --success: 22 163 74;
+  --warning: 217 119 6;
+  --danger: 220 38 38;
+  --shadow: 15 23 42;
+  color-scheme: light;
 }
 
-* {
-  box-sizing: border-box;
+.dark {
+  --bg: 7 10 20;
+  --surface: 13 18 32;
+  --surface-2: 20 27 46;
+  --line: 34 44 68;
+  --fg: 234 239 250;
+  --muted: 163 176 202;
+  --subtle: 118 132 160;
+  --primary: 86 164 255;
+  --primary-fg: 4 12 28;
+  --primary-soft: 17 34 64;
+  --accent: 56 214 255;
+  --halo: 244 114 182;
+  --success: 74 222 128;
+  --warning: 251 191 36;
+  --danger: 248 113 113;
+  --shadow: 0 0 0;
+  color-scheme: dark;
 }
 
-html {
-  scroll-behavior: smooth;
-  background: var(--background);
-}
+@layer base {
+  * {
+    @apply border-line;
+  }
 
-body {
-  min-height: 100vh;
-  color: var(--foreground);
-  background:
-    radial-gradient(circle at 20% 0%, rgb(56 244 255 / 0.12), transparent 28%),
-    radial-gradient(circle at 80% 10%, rgb(255 79 216 / 0.09), transparent 26%),
-    linear-gradient(180deg, #050814 0%, #07101f 52%, #050814 100%);
-}
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5.5rem;
+    -webkit-text-size-adjust: 100%;
+  }
 
-::selection {
-  color: #03111c;
-  background: #38f4ff;
+  body {
+    @apply min-h-screen bg-bg font-sans text-fg antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight text-fg;
+    /* Vietnamese stacks diacritics above and below; tighter leading makes lines collide. */
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: rgb(var(--primary) / 0.22);
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--primary));
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+  }
+
+  /* Edge's built-in reveal button duplicates our show/hide toggle */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
 }
 
 @layer components {
-  .glass-panel {
-    @apply rounded-md border border-white/10 bg-white/[0.055] shadow-violet backdrop-blur-xl;
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
   }
 
-  .section-shell {
-    @apply mx-auto w-full max-w-7xl px-4 sm:px-6;
+  .card {
+    @apply rounded-2xl border border-line bg-surface shadow-card;
   }
 
-  .cyber-label {
-    @apply text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200;
+  .card-hover {
+    @apply transition duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lift;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary;
+  }
+
+  .link {
+    @apply font-medium text-primary underline-offset-4 transition hover:underline;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-fg;
+  }
+
+  .field-hint {
+    @apply mt-1.5 text-xs text-subtle;
+  }
+
+  .field-error {
+    @apply mt-1.5 text-xs font-medium text-danger;
+  }
+
+  /* Soft glowing backdrop used on hero/auth sections */
+  .aurora {
+    background:
+      radial-gradient(60% 50% at 15% 10%, rgb(var(--primary) / 0.16), transparent 70%),
+      radial-gradient(45% 40% at 85% 0%, rgb(var(--halo) / 0.12), transparent 70%),
+      radial-gradient(50% 40% at 50% 100%, rgb(var(--accent) / 0.10), transparent 70%);
+  }
+
+  .grid-fade {
+    background-image:
+      linear-gradient(rgb(var(--fg) / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--fg) / 0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(100deg, rgb(var(--primary)), rgb(var(--accent)) 55%, rgb(var(--halo)));
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Article typography: map @tailwindcss/typography to our tokens */
+  .prose-blog {
+    --tw-prose-body: rgb(var(--fg) / 0.86);
+    --tw-prose-headings: rgb(var(--fg));
+    --tw-prose-lead: rgb(var(--muted));
+    --tw-prose-links: rgb(var(--primary));
+    --tw-prose-bold: rgb(var(--fg));
+    --tw-prose-counters: rgb(var(--subtle));
+    --tw-prose-bullets: rgb(var(--primary) / 0.7);
+    --tw-prose-hr: rgb(var(--line));
+    --tw-prose-quotes: rgb(var(--fg));
+    --tw-prose-quote-borders: rgb(var(--primary));
+    --tw-prose-captions: rgb(var(--subtle));
+    --tw-prose-code: rgb(var(--fg));
+    --tw-prose-pre-code: rgb(226 232 240);
+    --tw-prose-pre-bg: rgb(11 16 30);
+    --tw-prose-th-borders: rgb(var(--line));
+    --tw-prose-td-borders: rgb(var(--line));
+    @apply max-w-none text-[1.0625rem] leading-[1.8];
+  }
+
+  .prose-blog :where(h2, h3, h4) {
+    @apply scroll-mt-24 font-display tracking-tight;
+  }
+
+  .prose-blog :where(h2) {
+    @apply mt-12 border-b border-line pb-2 text-2xl;
+  }
+
+  .prose-blog > :first-child {
+    @apply mt-0;
+  }
+
+  .prose-blog :where(a) {
+    @apply decoration-primary/40 underline-offset-4 transition hover:decoration-primary;
+  }
+
+  .prose-blog :where(:not(pre) > code) {
+    @apply rounded-md border border-line bg-surface-2 px-1.5 py-0.5 text-[0.875em] font-medium;
+  }
+
+  .prose-blog :where(:not(pre) > code)::before,
+  .prose-blog :where(:not(pre) > code)::after {
+    content: none;
+  }
+
+  .prose-blog :where(blockquote) {
+    @apply rounded-r-xl bg-primary-soft/60 py-1 not-italic;
+  }
+
+  .prose-blog :where(blockquote p)::before,
+  .prose-blog :where(blockquote p)::after {
+    content: none;
+  }
+
+  .prose-blog :where(img) {
+    @apply rounded-xl border border-line;
+  }
+
+  .prose-blog :where(table) {
+    @apply block overflow-x-auto text-sm;
+  }
+
+  .prose-blog :where(pre) {
+    @apply m-0 rounded-none border-0 bg-transparent p-4 text-[0.875rem] leading-relaxed;
   }
 }
 
-pre {
-  overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid rgb(255 255 255 / 0.12);
-  background: rgb(2 6 23 / 0.88);
-  padding: 1rem;
+/* Syntax highlighting (highlight.js classes from rehype-highlight). Code blocks are
+   always dark so they read well in both themes. */
+.hljs {
+  color: #e2e8f0;
+  background: transparent;
+}
+.hljs-comment,
+.hljs-quote {
+  color: #7c8aa5;
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-doctag {
+  color: #c792ea;
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta .hljs-string {
+  color: #a5e075;
+}
+.hljs-number,
+.hljs-built_in,
+.hljs-type,
+.hljs-symbol,
+.hljs-bullet {
+  color: #f9a870;
+}
+.hljs-title,
+.hljs-title.function_,
+.hljs-name {
+  color: #7cc4ff;
+}
+.hljs-variable,
+.hljs-template-variable,
+.hljs-attr,
+.hljs-params {
+  color: #ffcb6b;
+}
+.hljs-meta,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: #5fe3d6;
+}
+.hljs-deletion {
+  color: #ff7a90;
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: 700;
 }
 
-code {
-  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

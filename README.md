@@ -1,134 +1,82 @@
-# Wanna Denia Team
+# Wanna Denia Team · shittimchest.blog
 
-Web platform cho cộng đồng CTF, cybersecurity, network, system và blog tri thức. Project dùng Next.js App Router, TypeScript, Tailwind CSS, Prisma, PostgreSQL, OTP Gmail, JWT cookie, role-based access control và Docker Compose để mang lên Ubuntu LXC trong Proxmox.
+Blog cộng đồng CTF, bảo mật thông tin, mạng và hệ thống. Next.js (App Router) + TypeScript + Tailwind CSS + Prisma/PostgreSQL, JWT cookie, CSRF double-submit, RBAC, i18n `vi` / `en` / `ja`.
 
-## Tính năng chính
+## Giao diện
 
-- Public home, public blog, blog detail render Markdown có sanitize.
-- Đăng ký bằng email/password, gửi OTP qua Gmail SMTP, OTP lưu dạng hash và hết hạn.
-- Login bằng JWT httpOnly cookie, CSRF double-submit cho mutation API.
-- Dashboard member tạo bài, draft/pending/publish theo quyền, Markdown preview, upload cover ảnh an toàn.
-- Admin/moderator duyệt hoặc reject bài pending.
-- i18n 3 ngôn ngữ: `vi`, `en`, `ja`.
-- Video nền `public/videos/nen web.mp4` đã được copy sẵn.
-- Docker Compose gồm app, PostgreSQL và Nginx reverse proxy mẫu.
+- Design system dùng CSS variables (`app/globals.css`) cho **light / dark / theo hệ thống**, chuyển bằng nút mặt trời/mặt trăng trên header, lưu vào `localStorage`, không bị nháy khi tải trang.
+- Font Be Vietnam Pro (hỗ trợ tiếng Việt đầy đủ) + JetBrains Mono cho code.
+- Header dính, có menu mobile, menu tài khoản, đổi ngôn ngữ mà vẫn ở nguyên trang hiện tại.
+- Blog: tìm kiếm, chip danh mục, lọc tag/ngôn ngữ/sắp xếp tự áp dụng, phân trang giữ bộ lọc.
+- Trang bài viết: thanh tiến độ đọc, mục lục tự highlight, khối code có tô màu + nút copy, like/lưu có trạng thái, bình luận hiện ngay sau khi gửi.
+- Dashboard theo tab: tổng quan, bài viết (sửa/xoá), trình soạn Markdown (toolbar, xem trước song song, chèn ảnh, upload ảnh bìa, Ctrl+S lưu nháp), bài đã lưu, hồ sơ.
+- Admin: lọc theo trạng thái, duyệt/từ chối (có hộp nhập lý do), gỡ bài, danh sách thành viên.
+- Đăng nhập / đăng ký / quên mật khẩu (OTP qua email) với kiểm tra form bằng tiếng Việt, đo độ mạnh mật khẩu, hiện/ẩn mật khẩu.
 
-## Chạy nhanh trên Ubuntu LXC
+## Cấu trúc
 
-```bash
-sudo apt update
-sudo apt install -y ca-certificates curl git openssl
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker "$USER"
-newgrp docker
+```
+app/[locale]/          trang theo ngôn ngữ (home, blog, blog/[slug], login, register,
+                       forgot-password, dashboard, admin)
+app/api/               API routes (auth, posts, comments, likes, bookmarks, uploads, admin)
+components/ui/         Button, Input, Select, Textarea, Badge, Avatar, EmptyState, ConfirmDialog
+components/layout/     Header, Footer, MobileMenu, UserMenu, ThemeToggle, LanguageSwitcher
+components/blog/       PostCard, PostFilters, Pagination, MarkdownRenderer, CodeBlock, TOC…
+components/dashboard/  DashboardShell, PostEditor, MyPostsList, AdminPanel
+messages/*.json        chuỗi giao diện cho vi / en / ja (cùng cấu trúc, được kiểm tra kiểu)
+lib/                   auth, csrf, db, i18n, format, validators, permissions…
+prisma/                schema, migrations, seed
 ```
 
-Copy thư mục `wanna-denia-team` lên LXC, sau đó:
-
-```bash
-cd wanna-denia-team
-cp .env.example .env
-openssl rand -hex 32
-openssl rand -hex 32
-nano .env
-docker compose up -d --build
-docker compose logs -f app
-```
-
-Mở:
-
-- App trực tiếp: `http://IP-LXC:3000`
-- Qua Nginx mẫu: `http://IP-LXC:8080`
-
-Tài khoản seed demo:
-
-- Email: `admin@wannadenia.local`
-- Password: `Admin@123456`
-
-Đổi mật khẩu admin ngay nếu deploy public.
-
-## Cấu hình Gmail SMTP
-
-Trong `.env`, điền:
-
-```env
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-gmail@gmail.com
-SMTP_PASS=your-gmail-app-password
-SMTP_FROM="Wanna Denia Team <your-gmail@gmail.com>"
-```
-
-`SMTP_PASS` nên là Gmail App Password, không dùng mật khẩu Gmail chính.
-
-## Database và seed
-
-Container app tự chạy:
-
-```bash
-npx prisma migrate deploy
-npx prisma db seed
-```
-
-Chạy thủ công khi cần:
-
-```bash
-docker compose exec app npx prisma migrate deploy
-docker compose exec app npx prisma db seed
-docker compose exec app npx prisma validate
-```
-
-## Backup và restore PostgreSQL
-
-Backup:
-
-```bash
-docker compose exec -T postgres pg_dump -U wanna -d wanna_denia > wanna_denia_backup.sql
-```
-
-Restore:
-
-```bash
-cat wanna_denia_backup.sql | docker compose exec -T postgres psql -U wanna -d wanna_denia
-```
-
-## Development local
+## Chạy local
 
 ```bash
 npm install
-cp .env.example .env
-npm run prisma:migrate
-npm run prisma:seed
+cp .env.example .env        # sửa DATABASE_URL
+npx prisma migrate deploy
+npx prisma db seed
 npm run dev
 ```
 
-Quality checks:
+Kiểm tra chất lượng:
 
 ```bash
 npm run lint
 npm run typecheck
 npm run test
 npm run build
-npm run prisma:validate
 ```
 
-## Update app an toàn trên LXC
+## Triển khai (Proxmox LXC)
+
+Hạ tầng hiện tại:
+
+| CT  | Vai trò       | Ghi chú                                  |
+| --- | ------------- | ---------------------------------------- |
+| 211 | wanna-web     | Docker: app `:3000` + nginx mẫu `:8080`  |
+| 213 | wanna-web-2   | Bản sao của 211 (load balance)           |
+| 212 | wanna-waf     | Nginx WAF + TLS, upstream 211/213 `:3000` |
+| 214 | wanna-db      | PostgreSQL                               |
+
+Cập nhật một node (lặp lại cho 211 rồi 213 để không bị gián đoạn):
 
 ```bash
-cd wanna-denia-team
-docker compose exec -T postgres pg_dump -U wanna -d wanna_denia > "backup-$(date +%F).sql"
-git pull
-docker compose up -d --build
+cd /opt/wanna-denia-team
+# chép code mới vào (giữ nguyên .env)
+docker compose build app
+docker compose up -d app
 docker compose logs -f app
 ```
 
+`docker-compose.yml` đang chạy `npm start` nên **không** tự chạy migrate/seed. Schema không đổi trong đợt làm lại giao diện này nên không cần migrate.
+
+Biến môi trường tuỳ chọn cho seed: `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` (chỉ dùng khi tạo admin lần đầu; seed không bao giờ đổi mật khẩu tài khoản đã có).
+
 ## Ghi chú production
 
-- Đổi `AUTH_SECRET`, `JWT_SECRET`, `SMTP_PASS`, password PostgreSQL trước khi public.
-- Đặt reverse proxy HTTPS bằng Nginx/Caddy và Let's Encrypt.
-- Chỉ mở port cần thiết bằng firewall.
-- Backup DB định kỳ.
-- Theo dõi log app, Nginx và PostgreSQL.
-- Nếu dùng Internet public lớn, thay in-memory rate limit bằng Redis.
+- Đổi `AUTH_SECRET`, `JWT_SECRET`, `SMTP_PASS`, mật khẩu PostgreSQL trước khi public.
+- Đổi mật khẩu tài khoản admin mặc định nếu vẫn còn dùng.
+- Ảnh upload nằm trong volume Docker của từng node. Với 2 node, upload và `/uploads` phải cùng đi về một node (WAF có upstream `wanna_upload_backend` cho việc này) hoặc dùng storage chung (NFS/S3).
+- Rate limit hiện lưu in-memory theo từng node; nếu public lớn nên chuyển sang Redis.
 
 Xem thêm [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md).

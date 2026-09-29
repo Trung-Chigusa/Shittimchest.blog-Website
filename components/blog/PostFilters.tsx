@@ -1,63 +1,145 @@
 "use client";
 
-import { Search } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState, useTransition } from "react";
+import { Loader2, Search, X } from "lucide-react";
+import { useI18n } from "@/components/providers/I18nProvider";
 import { Select } from "@/components/ui/Select";
+import { cn } from "@/lib/utils";
 
-export function PostFilters({
-  dictionary,
-  categories,
-  tags,
-  defaults,
-}: {
-  dictionary: {
-    search: string;
-    category: string;
-    tag: string;
-    language: string;
-    sort: string;
-    latest: string;
-    popular: string;
-  };
-  categories: { slug: string; name: string }[];
-  tags: { slug: string; name: string }[];
-  defaults: Record<string, string | undefined>;
-}) {
+type Option = { slug: string; name: string };
+
+export function PostFilters({ categories, tags }: { categories: Option[]; tags: Option[] }) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const [search, setSearch] = useState(params.get("search") ?? "");
+  const [pending, startTransition] = useTransition();
+
+  const activeCategory = params.get("category") ?? "";
+  const hasFilters = ["search", "category", "tag", "language", "sort"].some((key) => params.get(key));
+
+  function hrefWith(updates: Record<string, string | null>) {
+    const next = new URLSearchParams(params.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    }
+    next.delete("page"); // any filter change starts from page 1
+    const query = next.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }
+
+  function update(updates: Record<string, string | null>) {
+    startTransition(() => router.push(hrefWith(updates), { scroll: false }));
+  }
+
   return (
-    <form className="glass-panel grid gap-3 p-4 md:grid-cols-[1.4fr_1fr_1fr_0.8fr_0.8fr_auto]" action="">
-      <label className="relative">
-        <span className="sr-only">{dictionary.search}</span>
-        <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-500" />
-        <Input name="search" defaultValue={defaults.search} placeholder={dictionary.search} className="pl-9" />
-      </label>
-      <Select name="category" defaultValue={defaults.category ?? ""} aria-label={dictionary.category}>
-        <option value="">{dictionary.category}</option>
+    <div className="space-y-4">
+      <div className="card flex flex-col gap-3 p-3 sm:flex-row sm:items-center">
+        <form
+          role="search"
+          className="relative flex-1"
+          onSubmit={(event) => {
+            event.preventDefault();
+            update({ search: search.trim() || null });
+          }}
+        >
+          <label htmlFor="blog-search" className="sr-only">
+            {t.blog.search}
+          </label>
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+          <input
+            id="blog-search"
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={t.blog.searchPlaceholder}
+            maxLength={80}
+            className="h-11 w-full rounded-xl bg-surface-2 pl-10 pr-10 text-sm text-fg outline-none transition placeholder:text-subtle focus:bg-surface focus:ring-4 focus:ring-primary/15"
+          />
+          {pending ? (
+            <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
+          ) : search ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                update({ search: null });
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-subtle hover:bg-surface-2 hover:text-fg"
+              aria-label={t.blog.clearFilters}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : null}
+        </form>
+        <div className="grid grid-cols-3 gap-2 sm:w-[32rem]">
+          <Select aria-label={t.blog.tag} value={params.get("tag") ?? ""} onChange={(event) => update({ tag: event.target.value || null })}>
+            <option value="">{t.blog.allTags}</option>
+            {tags.map((tag) => (
+              <option key={tag.slug} value={tag.slug}>
+                #{tag.name}
+              </option>
+            ))}
+          </Select>
+          <Select
+            aria-label={t.blog.language}
+            value={params.get("language") ?? ""}
+            onChange={(event) => update({ language: event.target.value || null })}
+          >
+            <option value="">{t.blog.allLanguages}</option>
+            <option value="vi">{t.languages.vi}</option>
+            <option value="en">{t.languages.en}</option>
+            <option value="ja">{t.languages.ja}</option>
+          </Select>
+          <Select aria-label={t.blog.sort} value={params.get("sort") ?? "latest"} onChange={(event) => update({ sort: event.target.value === "latest" ? null : event.target.value })}>
+            <option value="latest">{t.blog.latest}</option>
+            <option value="popular">{t.blog.popular}</option>
+          </Select>
+        </div>
+      </div>
+
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 scrollbar-none sm:mx-0 sm:flex-wrap sm:px-0">
+        <Chip href={hrefWith({ category: null })} active={!activeCategory}>
+          {t.blog.allCategories}
+        </Chip>
         {categories.map((category) => (
-          <option key={category.slug} value={category.slug}>
+          <Chip key={category.slug} href={hrefWith({ category: category.slug })} active={activeCategory === category.slug}>
             {category.name}
-          </option>
+          </Chip>
         ))}
-      </Select>
-      <Select name="tag" defaultValue={defaults.tag ?? ""} aria-label={dictionary.tag}>
-        <option value="">{dictionary.tag}</option>
-        {tags.map((tag) => (
-          <option key={tag.slug} value={tag.slug}>
-            {tag.name}
-          </option>
-        ))}
-      </Select>
-      <Select name="language" defaultValue={defaults.language ?? "all"} aria-label={dictionary.language}>
-        <option value="all">{dictionary.language}</option>
-        <option value="vi">VI</option>
-        <option value="en">EN</option>
-        <option value="ja">JA</option>
-      </Select>
-      <Select name="sort" defaultValue={defaults.sort ?? "latest"} aria-label={dictionary.sort}>
-        <option value="latest">{dictionary.latest}</option>
-        <option value="popular">{dictionary.popular}</option>
-      </Select>
-      <Button type="submit">Filter</Button>
-    </form>
+        {hasFilters ? (
+          <Link
+            href={pathname}
+            scroll={false}
+            className="inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium text-danger transition hover:bg-danger/10"
+          >
+            <X className="h-3.5 w-3.5" />
+            {t.blog.clearFilters}
+          </Link>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function Chip({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      scroll={false}
+      aria-current={active ? "true" : undefined}
+      className={cn(
+        "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition",
+        active
+          ? "border-primary bg-primary text-primary-fg shadow-sm"
+          : "border-line bg-surface text-muted hover:border-primary/40 hover:text-fg",
+      )}
+    >
+      {children}
+    </Link>
   );
 }

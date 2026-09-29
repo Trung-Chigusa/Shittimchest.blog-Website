@@ -1,3 +1,5 @@
+import "dotenv/config";
+import { randomBytes } from "crypto";
 import { PrismaClient, PostLanguage, PostStatus, UserRole } from "@prisma/client";
 import { hashPassword } from "../lib/password";
 import { slugify } from "../lib/slug";
@@ -129,40 +131,40 @@ async function main() {
     });
   }
 
-  const admin = await prisma.user.upsert({
-    where: { email: "admin@wannadenia.local" },
-    update: {
-      role: UserRole.ADMIN,
-      emailVerified: true,
-      displayName: "Wanna Denia Admin",
-    },
-    create: {
-      email: "admin@wannadenia.local",
-      passwordHash: await hashPassword("Admin@123456"),
-      displayName: "Wanna Denia Admin",
-      role: UserRole.ADMIN,
-      emailVerified: true,
-      bio: "Demo administrator account. Change this password before public deployment.",
-    },
-  });
+  // The seed runs on every container start. The admin account is only created once;
+  // an existing account (and its password) is never touched here.
+  const adminEmail = process.env.SEED_ADMIN_EMAIL || "admin@wannadenia.local";
+  const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
+  let initialPassword = process.env.SEED_ADMIN_PASSWORD;
+  if (!existingAdmin && !initialPassword) {
+    // Never fall back to a well-known password: generate one and show it once.
+    initialPassword = `${randomBytes(9).toString("base64url")}#A1`;
+    console.log(`[seed] Created admin ${adminEmail} with generated password: ${initialPassword}`);
+  }
+  const admin =
+    existingAdmin ??
+    (await prisma.user.create({
+      data: {
+        email: adminEmail,
+        passwordHash: await hashPassword(initialPassword!),
+        displayName: "Wanna Denia Admin",
+        role: UserRole.ADMIN,
+        emailVerified: true,
+        bio: "Administrator account. Change this password before public deployment.",
+      },
+    }));
+
+  // Sample posts only go into an empty blog. Previously every restart overwrote their
+  // content, reset publishedAt to "now" and re-created them after an admin deleted them.
+  if ((await prisma.post.count()) > 0) return;
 
   for (const sample of posts) {
     const category = await prisma.category.findUniqueOrThrow({
       where: { slug: sample.categorySlug },
     });
     const slug = slugify(sample.title);
-    const post = await prisma.post.upsert({
-      where: { slug },
-      update: {
-        title: sample.title,
-        excerpt: sample.excerpt,
-        content: sample.content,
-        language: sample.language,
-        categoryId: category.id,
-        status: PostStatus.PUBLISHED,
-        publishedAt: new Date(),
-      },
-      create: {
+    const post = await prisma.post.create({
+      data: {
         title: sample.title,
         slug,
         excerpt: sample.excerpt,
@@ -182,11 +184,7 @@ async function main() {
 
     for (const tagName of sample.tags) {
       const tag = await prisma.tag.findUniqueOrThrow({ where: { slug: slugify(tagName) } });
-      await prisma.postTag.upsert({
-        where: { postId_tagId: { postId: post.id, tagId: tag.id } },
-        update: {},
-        create: { postId: post.id, tagId: tag.id },
-      });
+      await prisma.postTag.create({ data: { postId: post.id, tagId: tag.id } });
     }
   }
 }

@@ -1,55 +1,66 @@
 import Link from "next/link";
-import { ShieldCheck, Terminal } from "lucide-react";
+import { Suspense } from "react";
+import { PenSquare } from "lucide-react";
 import { getCurrentUserFromCookies } from "@/lib/auth";
 import { getDictionary, type Locale } from "@/lib/i18n";
-import { Button } from "@/components/ui/Button";
+import { buttonClasses } from "@/components/ui/Button";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
-import { LogoutButton } from "@/components/auth/LogoutButton";
+import { Logo } from "@/components/layout/Logo";
+import { MobileMenu } from "@/components/layout/MobileMenu";
+import { NavLinks, type NavItem } from "@/components/layout/NavLinks";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { UserMenu } from "@/components/layout/UserMenu";
 
 export async function Header({ locale }: { locale: Locale }) {
-  const dictionary = getDictionary(locale);
+  const t = getDictionary(locale);
   const user = await getCurrentUserFromCookies();
+  const isStaff = user?.role === "ADMIN" || user?.role === "MODERATOR";
+
+  const items: NavItem[] = [
+    { href: `/${locale}`, label: t.nav.home, exact: true },
+    { href: `/${locale}/blog`, label: t.nav.blog },
+    ...(user ? [{ href: `/${locale}/dashboard`, label: t.nav.dashboard }] : []),
+    ...(isStaff ? [{ href: `/${locale}/admin`, label: t.nav.admin }] : []),
+  ];
+
+  const menuUser = user
+    ? { displayName: user.displayName, email: user.email, role: user.role, avatarUrl: user.avatarUrl }
+    : null;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/72 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href={`/${locale}`} className="flex min-w-0 items-center gap-2 text-white">
-          <span className="grid h-9 w-9 place-items-center rounded-md border border-cyan-200/40 bg-cyan-200/10 shadow-glow">
-            <ShieldCheck className="h-5 w-5 text-cyan-200" aria-hidden="true" />
-          </span>
-          <span className="truncate font-semibold">Wanna Denia Team</span>
-        </Link>
-        <nav className="hidden items-center gap-1 md:flex">
-          <Link className="rounded px-3 py-2 text-sm text-slate-300 hover:bg-white/8 hover:text-white" href={`/${locale}`}>
-            {dictionary.nav.home}
+    <header className="sticky top-0 z-40 border-b border-line/70 bg-bg/75 backdrop-blur-xl supports-[backdrop-filter]:bg-bg/60">
+      <div className="container-page flex h-16 items-center justify-between gap-4">
+        <div className="flex items-center gap-8">
+          <Link href={`/${locale}`} className="rounded-xl" aria-label="Wanna Denia Team">
+            <Logo />
           </Link>
-          <Link className="rounded px-3 py-2 text-sm text-slate-300 hover:bg-white/8 hover:text-white" href={`/${locale}/blog`}>
-            {dictionary.nav.blog}
-          </Link>
-          <Link
-            className="rounded px-3 py-2 text-sm text-slate-300 hover:bg-white/8 hover:text-white"
-            href={`/${locale}/dashboard`}
-          >
-            {dictionary.nav.dashboard}
-          </Link>
-          {user?.role === "ADMIN" || user?.role === "MODERATOR" ? (
-            <Link className="rounded px-3 py-2 text-sm text-slate-300 hover:bg-white/8 hover:text-white" href={`/${locale}/admin`}>
-              {dictionary.nav.admin}
-            </Link>
-          ) : null}
-        </nav>
-        <div className="flex items-center gap-2">
-          <LanguageSwitcher locale={locale} />
-          {user ? (
-            <LogoutButton label={dictionary.nav.logout} locale={locale} />
+          <NavLinks items={items} />
+        </div>
+        <div className="flex items-center gap-1">
+          <Suspense fallback={<span className="h-9 w-14" />}>
+            <LanguageSwitcher />
+          </Suspense>
+          <ThemeToggle />
+          <span className="mx-1.5 hidden h-6 w-px bg-line md:block" aria-hidden="true" />
+          {menuUser ? (
+            <div className="hidden items-center gap-2 md:flex">
+              <Link href={`/${locale}/dashboard?tab=editor`} className={buttonClasses({ size: "sm", variant: "soft" })}>
+                <PenSquare />
+                {t.nav.write}
+              </Link>
+              <UserMenu user={menuUser} />
+            </div>
           ) : (
-            <Link href={`/${locale}/login`}>
-              <Button variant="secondary" className="h-9 px-3">
-                <Terminal className="h-4 w-4" aria-hidden="true" />
-                {dictionary.nav.login}
-              </Button>
-            </Link>
+            <div className="hidden items-center gap-2 md:flex">
+              <Link href={`/${locale}/login`} className={buttonClasses({ size: "sm", variant: "ghost" })}>
+                {t.nav.login}
+              </Link>
+              <Link href={`/${locale}/register`} className={buttonClasses({ size: "sm" })}>
+                {t.nav.register}
+              </Link>
+            </div>
           )}
+          <MobileMenu items={items} user={menuUser} />
         </div>
       </div>
     </header>
