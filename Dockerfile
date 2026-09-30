@@ -7,6 +7,9 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL=postgresql://wanna:wanna_password@postgres:5432/wanna_denia?schema=public
+# Same BUILD_ID on every node keeps /_next/static asset references consistent behind the load balancer.
+ARG BUILD_ID
+ENV BUILD_ID=${BUILD_ID}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate

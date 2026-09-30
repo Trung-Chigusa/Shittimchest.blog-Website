@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ["bcryptjs"],
+  // Two load-balanced nodes must agree on the build ID, or pages rendered by one node
+  // reference assets the other can't serve. Pass BUILD_ID (e.g. the git commit) at build time.
+  generateBuildId: async () => process.env.BUILD_ID || null,
   async headers() {
     const csp = [
       "default-src 'self'",

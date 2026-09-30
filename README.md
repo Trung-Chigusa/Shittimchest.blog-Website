@@ -58,15 +58,25 @@ Hạ tầng hiện tại:
 | 212 | wanna-waf     | Nginx WAF + TLS, upstream 211/213 `:3000` |
 | 214 | wanna-db      | PostgreSQL                               |
 
-Cập nhật một node (lặp lại cho 211 rồi 213 để không bị gián đoạn):
+> **Quan trọng:** 211 và 213 phải chạy **cùng một image**. Nếu mỗi node tự build riêng (hoặc một node còn bản cũ), HTML từ node này sẽ trỏ tới file CSS/JS mà node kia không có → trang hiện ra không có CSS. Vì vậy: build một lần, chuyển image sang node còn lại.
 
-```bash
-cd /opt/wanna-denia-team
-# chép code mới vào (giữ nguyên .env)
-docker compose build app
-docker compose up -d app
-docker compose logs -f app
-```
+1. Build trên 211 (giữ nguyên `.env`, `docker-compose.yml`, `docker/nginx.conf`):
+
+   ```bash
+   cd /opt/wanna-denia-team
+   docker compose build --build-arg BUILD_ID=$(date +%Y%m%d%H%M%S) app
+   docker compose up -d app
+   ```
+
+2. Chuyển đúng image đó sang 213 (chạy trên host Proxmox):
+
+   ```bash
+   pct exec 211 -- sh -c 'docker save wanna-denia-team-app:latest | gzip -1 > /tmp/app.tgz'
+   pct pull 211 /tmp/app.tgz /root/app.tgz && pct push 213 /root/app.tgz /tmp/app.tgz
+   pct exec 213 -- sh -c 'gunzip -c /tmp/app.tgz | docker load && cd /opt/wanna-denia-team && docker compose up -d --no-build app'
+   ```
+
+3. Kiểm tra cả hai node có cùng build: `docker exec wanna-denia-app cat /app/.next/BUILD_ID`.
 
 `docker-compose.yml` đang chạy `npm start` nên **không** tự chạy migrate/seed. Schema không đổi trong đợt làm lại giao diện này nên không cần migrate.
 
