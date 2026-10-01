@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 export const fieldClasses =
-  "w-full rounded-xl border border-line bg-surface px-3.5 text-sm text-fg shadow-sm outline-none transition placeholder:text-subtle hover:border-subtle/50 focus:border-primary focus:ring-4 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-danger aria-[invalid=true]:focus:ring-danger/15";
+  "w-full border border-line bg-bg/60 px-3.5 text-sm text-fg outline-none transition placeholder:text-subtle hover:border-muted/50 focus:border-primary focus:bg-bg/80 focus:shadow-[0_0_0_1px_rgb(var(--primary)/0.4),0_0_20px_-6px_rgb(var(--primary)/0.6)] disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-danger";
 
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 

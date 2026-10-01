@@ -4,8 +4,11 @@ Blog cộng đồng CTF, bảo mật thông tin, mạng và hệ thống. Next.j
 
 ## Giao diện
 
-- Design system dùng CSS variables (`app/globals.css`) cho **light / dark / theo hệ thống**, chuyển bằng nút mặt trời/mặt trăng trên header, lưu vào `localStorage`, không bị nháy khi tải trang.
-- Font Be Vietnam Pro (hỗ trợ tiếng Việt đầy đủ) + JetBrains Mono cho code.
+- Phong cách **game HUD "Resonance"** (lấy cảm hứng từ các game action-RPG như Wuthering Waves, toàn bộ hình ảnh là thiết kế gốc): nền tối, chữ kem, nhấn vàng ánh kim, khung viền có góc bracket, nút vát góc, chữ HUD Chakra Petch.
+- Mỗi danh mục "cộng hưởng" một nguyên tố màu (Quang phổ, Hỗn loạn, Khí động, Điện từ, Nhiệt hạch, Băng tinh); bài viết là thẻ Echo có sao độ hiếm theo độ khó.
+- Tương tác (`components/fx/`): màn khởi động lần đầu mỗi phiên, nền hạt sao parallax theo chuột, con trỏ vòng sáng, hiệu ứng nổ khi click, thẻ nghiêng 3D + đốm sáng theo chuột, xuất hiện khi cuộn (CSS scroll-driven), âm thanh UI tổng hợp (tắt mặc định, nút loa trên header), phím tắt (`/`, `G H`, `G B`, `G D`, `?`), "+10 XP" khi thả tim, cấp Resonance + thanh XP trong dashboard.
+- Tất cả hiệu ứng tắt khi người dùng bật *giảm chuyển động*; trên thiết bị cảm ứng không có con trỏ tuỳ biến.
+- Font Be Vietnam Pro (hỗ trợ tiếng Việt đầy đủ) + Chakra Petch cho tiêu đề + JetBrains Mono cho code.
 - Header dính, có menu mobile, menu tài khoản, đổi ngôn ngữ mà vẫn ở nguyên trang hiện tại.
 - Blog: tìm kiếm, chip danh mục, lọc tag/ngôn ngữ/sắp xếp tự áp dụng, phân trang giữ bộ lọc.
 - Trang bài viết: thanh tiến độ đọc, mục lục tự highlight, khối code có tô màu + nút copy, like/lưu có trạng thái, bình luận hiện ngay sau khi gửi.

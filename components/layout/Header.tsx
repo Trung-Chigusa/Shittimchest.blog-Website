@@ -4,11 +4,11 @@ import { PenSquare } from "lucide-react";
 import { getCurrentUserFromCookies } from "@/lib/auth";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { buttonClasses } from "@/components/ui/Button";
+import { SoundToggle } from "@/components/fx/SoundToggle";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { Logo } from "@/components/layout/Logo";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { NavLinks, type NavItem } from "@/components/layout/NavLinks";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { UserMenu } from "@/components/layout/UserMenu";
 
 export async function Header({ locale }: { locale: Locale }) {
@@ -28,10 +28,11 @@ export async function Header({ locale }: { locale: Locale }) {
     : null;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line/70 bg-bg/75 backdrop-blur-xl supports-[backdrop-filter]:bg-bg/60">
+    <header className="sticky top-0 z-40 border-b border-line/60 bg-bg/70 backdrop-blur-xl">
+      <div className="gold-line h-px w-full opacity-70" aria-hidden="true" />
       <div className="container-page flex h-16 items-center justify-between gap-4">
-        <div className="flex items-center gap-8">
-          <Link href={`/${locale}`} className="rounded-xl" aria-label="Wanna Denia Team">
+        <div className="flex items-center gap-10">
+          <Link href={`/${locale}`} aria-label="Wanna Denia Team">
             <Logo />
           </Link>
           <NavLinks items={items} />
@@ -40,10 +41,10 @@ export async function Header({ locale }: { locale: Locale }) {
           <Suspense fallback={<span className="h-9 w-14" />}>
             <LanguageSwitcher />
           </Suspense>
-          <ThemeToggle />
-          <span className="mx-1.5 hidden h-6 w-px bg-line md:block" aria-hidden="true" />
+          <SoundToggle />
+          <span className="mx-2 hidden h-5 w-px rotate-12 bg-line md:block" aria-hidden="true" />
           {menuUser ? (
-            <div className="hidden items-center gap-2 md:flex">
+            <div className="hidden items-center gap-3 md:flex">
               <Link href={`/${locale}/dashboard?tab=editor`} className={buttonClasses({ size: "sm", variant: "soft" })}>
                 <PenSquare />
                 {t.nav.write}

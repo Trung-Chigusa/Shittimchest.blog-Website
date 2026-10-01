@@ -1,12 +1,13 @@
 import { cn, hueFromString, initials } from "@/lib/utils";
 
 const sizes = {
-  xs: "h-6 w-6 text-[10px]",
-  sm: "h-8 w-8 text-xs",
-  md: "h-10 w-10 text-sm",
-  lg: "h-14 w-14 text-lg",
+  xs: "h-6 w-6 text-[9px]",
+  sm: "h-8 w-8 text-[11px]",
+  md: "h-10 w-10 text-xs",
+  lg: "h-16 w-16 text-lg",
 };
 
+/** Portrait tile with chamfered corners, like a character frame. */
 export function Avatar({
   name,
   src,
@@ -19,19 +20,22 @@ export function Avatar({
   className?: string;
 }) {
   const hue = hueFromString(name);
-  if (src) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={src} alt="" className={cn("shrink-0 rounded-full object-cover ring-2 ring-surface", sizes[size], className)} />
-    );
-  }
   return (
     <span
       aria-hidden="true"
-      className={cn("grid shrink-0 place-items-center rounded-full font-bold text-white ring-2 ring-surface", sizes[size], className)}
-      style={{ background: `linear-gradient(135deg, hsl(${hue} 80% 58%), hsl(${(hue + 40) % 360} 75% 48%))` }}
+      className={cn("cut-sm relative grid shrink-0 place-items-center overflow-hidden font-display font-bold text-white", sizes[size], className)}
+      style={{
+        background: `linear-gradient(145deg, hsl(${hue} 55% 42%), hsl(${(hue + 50) % 360} 60% 22%))`,
+      }}
     >
-      {initials(name)}
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      ) : (
+        <span className="relative tracking-wider drop-shadow">{initials(name)}</span>
+      )}
+      <span className="pointer-events-none absolute inset-0 border border-primary/40" />
+      <span className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-primary" />
     </span>
   );
 }

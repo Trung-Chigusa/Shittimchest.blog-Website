@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Be_Vietnam_Pro, JetBrains_Mono } from "next/font/google";
+import { Be_Vietnam_Pro, Chakra_Petch, JetBrains_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import Script from "next/script";
 import { isLocale } from "@/lib/i18n";
@@ -8,8 +8,16 @@ import "./globals.css";
 
 const sans = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+// Squared, technical letterforms for HUD labels and headings (has Vietnamese glyphs).
+const display = Chakra_Petch({
+  subsets: ["latin", "vietnamese"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
   display: "swap",
 });
 
@@ -33,24 +41,23 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f8fc" },
-    { media: "(prefers-color-scheme: dark)", color: "#070a14" },
-  ],
+  themeColor: "#08090d",
+  colorScheme: "dark",
 };
 
-// Runs before paint so the saved theme applies without a flash.
-const themeScript = `(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||((!t||t==='system')&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d)}catch(e){}})()`;
+// Runs before paint: enables reveal-on-scroll styling only when JavaScript is available,
+// and marks the first page view of a session for the boot intro.
+const initScript = `(function(){var h=document.documentElement;h.classList.add('fx');try{if(!sessionStorage.getItem('booted')&&!matchMedia('(prefers-reduced-motion: reduce)').matches)h.classList.add('boot')}catch(e){}})()`;
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const headerLocale = (await headers()).get("x-locale") ?? "vi";
   const lang = isLocale(headerLocale) ? headerLocale : "vi";
 
   return (
-    <html lang={lang} suppressHydrationWarning>
-      <body className={`${sans.variable} ${mono.variable}`} style={{ ["--font-display" as string]: "var(--font-sans)" }}>
-        <Script id="theme-init" strategy="beforeInteractive">
-          {themeScript}
+    <html lang={lang} className="dark" suppressHydrationWarning>
+      <body className={`${sans.variable} ${display.variable} ${mono.variable}`}>
+        <Script id="fx-init" strategy="beforeInteractive">
+          {initScript}
         </Script>
         {children}
       </body>

@@ -32,7 +32,7 @@ export function UserMenu({ user }: { user: MenuUser }) {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex items-center gap-1.5 rounded-full p-0.5 pr-1.5 transition hover:bg-surface-2"
+        className="flex items-center gap-1.5 p-0.5 pr-1.5 transition hover:bg-fg/[0.05]"
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={user.displayName}

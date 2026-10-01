@@ -545,7 +545,7 @@ export function PostEditor({
             {tags.length ? (
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {tags.map((tag) => (
-                  <span key={tag} className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary">
+                  <span key={tag} className="border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[11px] text-primary">
                     #{tag}
                   </span>
                 ))}

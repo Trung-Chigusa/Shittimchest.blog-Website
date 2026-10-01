@@ -6,7 +6,8 @@ import { ArrowLeft, Calendar, Clock, Eye, EyeOff, MessageSquare } from "lucide-r
 import { CommentBox } from "@/components/blog/CommentBox";
 import { LikeBookmarkButtons } from "@/components/blog/LikeBookmarkButtons";
 import { MarkdownRenderer } from "@/components/blog/MarkdownRenderer";
-import { PostCard, PostCover } from "@/components/blog/PostCard";
+import { PostCard, PostCover, Stars } from "@/components/blog/PostCard";
+import { categoryElement, elementColor, rarity } from "@/lib/category-icons";
 import { ReadingProgress } from "@/components/blog/ReadingProgress";
 import { TableOfContents } from "@/components/blog/TableOfContents";
 import { Avatar } from "@/components/ui/Avatar";
@@ -91,6 +92,8 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ loc
   const headings = extractHeadings(post.content);
   const minutes = readingTime(post.content);
   const canEdit = user ? canEditPost(user, post) : false;
+  const element = categoryElement(post.category.slug);
+  const elementHex = elementColor[element];
 
   return (
     <main className="pb-8">
@@ -108,32 +111,39 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ loc
       <div className="container-page pt-10 sm:pt-14">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_14rem]">
         <div className="min-w-0">
-        <header className="max-w-3xl">
-          <nav className="flex items-center gap-2 text-sm text-subtle" aria-label="Breadcrumb">
-            <Link href={`/${locale}/blog`} className="inline-flex items-center gap-1.5 font-medium hover:text-primary">
+        <header className="max-w-3xl animate-fade-up">
+          <nav className="flex items-center gap-2 font-display text-xs uppercase tracking-[0.18em] text-subtle" aria-label="Breadcrumb">
+            <Link href={`/${locale}/blog`} className="inline-flex items-center gap-1.5 hover:text-primary">
               <ArrowLeft className="h-4 w-4" />
               {t.blog.backToBlog}
             </Link>
             <span aria-hidden="true">/</span>
-            <Link href={`/${locale}/blog?category=${post.category.slug}`} className="truncate hover:text-primary">
+            <Link href={`/${locale}/blog?category=${post.category.slug}`} className="truncate hover:text-primary" style={{ color: elementHex }}>
               {post.category.name}
             </Link>
           </nav>
 
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="mt-7 flex flex-wrap items-center gap-2">
             <Badge>{t.topicType[post.topicType]}</Badge>
-            <Badge tone="halo">{t.difficulty[post.difficulty]}</Badge>
+            <Badge tone="neutral" style={{ color: elementHex, borderColor: `${elementHex}66` }}>
+              {t.fx.elements[element]}
+            </Badge>
             <Badge tone="neutral" className="uppercase">
               {post.language}
             </Badge>
+            <span className="ml-1 flex items-center gap-2 font-display text-[0.65rem] uppercase tracking-[0.2em] text-subtle">
+              {t.fx.rarity}
+              <Stars count={rarity(post.difficulty)} />
+              <span className="text-primary">{t.difficulty[post.difficulty]}</span>
+            </span>
           </div>
-          <h1 className="mt-5 text-3xl font-extrabold leading-[1.25] sm:text-4xl sm:leading-[1.22] lg:text-[2.6rem]">{post.title}</h1>
-          {post.excerpt ? <p className="mt-5 text-lg leading-relaxed text-muted">{post.excerpt}</p> : null}
+          <h1 className="mt-5 font-display text-3xl font-bold leading-[1.25] sm:text-4xl sm:leading-[1.22] lg:text-[2.6rem]">{post.title}</h1>
+          {post.excerpt ? <p className="mt-5 border-l-2 border-primary/60 pl-4 text-lg leading-relaxed text-muted">{post.excerpt}</p> : null}
 
-          <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3 border-y border-line py-4 text-sm text-subtle">
+          <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3 border-y border-line/70 py-4 font-mono text-xs text-subtle">
             <span className="flex items-center gap-2.5">
               <Avatar name={post.author.displayName} src={post.author.avatarUrl} size="md" />
-              <span className="font-semibold text-fg">{post.author.displayName}</span>
+              <span className="font-sans text-sm font-semibold text-fg">{post.author.displayName}</span>
             </span>
             <span className="flex items-center gap-1.5">
               <Calendar className="h-4 w-4" />
@@ -159,7 +169,7 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ loc
         </header>
 
         {/* A real cover gets a cinematic frame; the generated fallback stays a slim banner. */}
-        <div className="mt-10 overflow-hidden rounded-3xl border border-line shadow-card">
+        <div className="card mt-10 overflow-hidden">
           <div className={post.coverImage ? "aspect-[2/1] sm:aspect-[21/9]" : "aspect-[3/1] sm:aspect-[5/1]"}>
             <PostCover post={post} iconClassName={post.coverImage ? undefined : "h-14 w-14"} />
           </div>
@@ -183,7 +193,7 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ loc
                   <Link
                     key={tag.id}
                     href={`/${locale}/blog?tag=${tag.slug}`}
-                    className="rounded-full bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:bg-primary-soft hover:text-primary"
+                    className="border border-line bg-surface/70 px-3 py-1 font-mono text-xs text-muted transition hover:border-primary/60 hover:text-primary"
                   >
                     #{tag.name}
                   </Link>

@@ -48,7 +48,13 @@
     "writeArticle": "Write a post",
     "statPosts": "Posts",
     "statMembers": "Members",
-    "statTopics": "Topics"
+    "statTopics": "Topics",
+    "menu": [
+      { "title": "Archive", "sub": "Writeups, labs and notes" },
+      { "title": "CTF writeups", "sub": "Step-by-step solutions" },
+      { "title": "Write", "sub": "Share what you just learned" },
+      { "title": "Join", "sub": "Create a free account" }
+    ]
   },
   "home": {
     "featuredEyebrow": "Latest",
@@ -287,6 +293,35 @@
   "error": {
     "title": "Something went wrong",
     "body": "We couldn't load this content. Please try again."
+  },
+  "fx": {
+    "sound": "Interface sounds",
+    "booting": "Synchronizing Resonance",
+    "bootLines": ["Opening link…", "Loading knowledge archive…", "Calibrating frequency…", "Sync complete."],
+    "skip": "Press any key to skip",
+    "shortcuts": "Keyboard shortcuts",
+    "shortcutList": [
+      ["/", "Search posts"],
+      ["G  H", "Go home"],
+      ["G  B", "Open the blog"],
+      ["G  D", "Dashboard"],
+      ["?", "Toggle this panel"],
+      ["Esc", "Close"]
+    ],
+    "xp": "+{n} XP",
+    "level": "Resonance level",
+    "nextLevel": "{n} XP to next level",
+    "xpRules": "Publish +100 · Like received +10 · Comment received +5",
+    "rarity": "Rarity",
+    "menuHint": "Choose your path",
+    "elements": {
+      "spectro": "Spectro",
+      "havoc": "Havoc",
+      "aero": "Aero",
+      "electro": "Electro",
+      "fusion": "Fusion",
+      "glacio": "Glacio"
+    }
   },
   "errors": {
     "INVALID_CREDENTIALS": "Incorrect email or password.",

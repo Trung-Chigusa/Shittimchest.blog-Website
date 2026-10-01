@@ -73,7 +73,7 @@ export function StrengthMeter({ value }: { value: string }) {
     <div className="mt-2">
       <div className="flex gap-1" aria-hidden="true">
         {[0, 1, 2, 3].map((index) => (
-          <span key={index} className={cn("h-1 flex-1 rounded-full bg-line transition", index < score && meterColors[score])} />
+          <span key={index} className={cn("h-1 flex-1 -skew-x-[30deg] bg-line transition", index < score && meterColors[score])} />
         ))}
       </div>
       <p className="mt-1.5 text-xs text-subtle">

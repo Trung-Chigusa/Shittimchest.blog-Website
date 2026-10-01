@@ -84,9 +84,10 @@ export default async function BlogPage({
 
   return (
     <main className="container-page py-12 sm:py-16">
-      <header className="max-w-2xl">
+      <header className="relative max-w-2xl animate-fade-up">
         <p className="eyebrow">{t.blog.eyebrow}</p>
-        <h1 className="mt-2 text-4xl font-extrabold sm:text-5xl">{t.blog.title}</h1>
+        <h1 className="hud-title mt-4 text-4xl sm:text-5xl">{t.blog.title}</h1>
+        <div className="mt-4 h-px w-40 bg-gradient-to-r from-primary to-transparent" />
         <p className="mt-4 text-lg text-muted">{t.blog.subtitle}</p>
       </header>
 
@@ -96,8 +97,10 @@ export default async function BlogPage({
         </Suspense>
       </div>
 
-      <p className="mt-8 text-sm font-medium text-subtle" aria-live="polite">
+      <p className="mt-8 flex items-center gap-3 font-display text-xs uppercase tracking-[0.25em] text-subtle" aria-live="polite">
+        <span className="h-1.5 w-1.5 rotate-45 bg-primary" aria-hidden="true" />
         {fmt(t.blog.results, { n: total })}
+        <span className="h-px flex-1 bg-line/60" aria-hidden="true" />
       </p>
 
       {posts.length ? (

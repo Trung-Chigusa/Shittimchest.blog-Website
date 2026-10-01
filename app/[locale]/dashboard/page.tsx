@@ -12,6 +12,7 @@ import { getCurrentUserFromCookies } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDate, getDictionary } from "@/lib/i18n";
 import { canEditPost, canPublishDirectly, canModerate } from "@/lib/permissions";
+import { computeXp } from "@/lib/xp";
 
 export const dynamic = "force-dynamic";
 
@@ -212,8 +213,14 @@ export default async function DashboardPage({
     );
   }
 
+  const xp = computeXp({
+    published: posts.filter((post) => post.status === "PUBLISHED").length,
+    likes: posts.reduce((sum, post) => sum + post.likes, 0),
+    comments: posts.reduce((sum, post) => sum + post.comments, 0),
+  });
+
   return (
-    <DashboardShell locale={locale} tab={tab} user={shellUser}>
+    <DashboardShell locale={locale} tab={tab} user={shellUser} xp={xp}>
       {content}
     </DashboardShell>
   );

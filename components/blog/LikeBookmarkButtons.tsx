@@ -6,6 +6,8 @@ import { Bookmark, Heart, Link2 } from "lucide-react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { apiRequest, errorMessage } from "@/lib/client-api";
+import { fmt } from "@/lib/format";
+import { play } from "@/lib/sfx";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -23,10 +25,12 @@ export function LikeBookmarkButtons({ postId, signedIn, initialLiked, initialBoo
   const [likes, setLikes] = useState(likeCount);
   const [bookmarked, setBookmarked] = useState(initialBookmarked);
   const [busy, setBusy] = useState<"like" | "bookmark" | null>(null);
+  const [floats, setFloats] = useState<number[]>([]);
 
   async function toggle(kind: "like" | "bookmark") {
     if (!signedIn) {
       toast(t.blog.loginToComment, "info");
+      play("error");
       return;
     }
     setBusy(kind);
@@ -35,13 +39,21 @@ export function LikeBookmarkButtons({ postId, signedIn, initialLiked, initialBoo
     if (kind === "like") {
       setLiked(!wasActive);
       setLikes((value) => value + (wasActive ? -1 : 1));
+      if (!wasActive) {
+        // "+10 XP" for the author floats up from the button
+        const id = Date.now();
+        setFloats((items) => [...items, id]);
+        window.setTimeout(() => setFloats((items) => items.filter((item) => item !== id)), 1200);
+      }
     } else {
       setBookmarked(!wasActive);
     }
     try {
       const data = await apiRequest<{ active: boolean }>(kind === "like" ? "/api/likes" : "/api/bookmarks", { json: { postId } });
+      if (data.active) play("success");
       if (kind === "bookmark") toast(data.active ? t.blog.bookmarked : t.blog.bookmark, "success");
     } catch (error) {
+      play("error");
       if (kind === "like") {
         setLiked(wasActive);
         setLikes((value) => value + (wasActive ? 1 : -1));
@@ -64,24 +76,37 @@ export function LikeBookmarkButtons({ postId, signedIn, initialLiked, initialBoo
   }
 
   const pill =
-    "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition active:scale-95 disabled:opacity-60";
+    "cut-sm relative inline-flex h-10 items-center gap-2 border px-4 font-display text-xs font-semibold uppercase tracking-[0.14em] transition active:scale-95 disabled:opacity-60";
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        onClick={() => toggle("like")}
-        disabled={busy === "like"}
-        aria-pressed={liked}
-        className={cn(
-          pill,
-          liked ? "border-halo/40 bg-halo/10 text-halo" : "border-line bg-surface text-muted hover:border-halo/40 hover:text-halo",
-        )}
-      >
-        <Heart className={cn("h-4 w-4 transition", liked && "scale-110 fill-current")} />
-        {t.blog.like}
-        <span className="tabular-nums opacity-80">{likes}</span>
-      </button>
+      <span className="relative">
+        <button
+          type="button"
+          onClick={() => toggle("like")}
+          disabled={busy === "like"}
+          aria-pressed={liked}
+          className={cn(
+            pill,
+            liked
+              ? "border-halo/60 bg-halo/15 text-halo shadow-[0_0_20px_-6px_rgb(var(--halo))]"
+              : "border-line bg-surface text-muted hover:border-halo/50 hover:text-halo",
+          )}
+        >
+          <Heart className={cn("h-4 w-4 transition", liked && "scale-110 fill-current")} />
+          {t.blog.like}
+          <span className="font-mono tabular-nums opacity-80">{likes}</span>
+        </button>
+        {floats.map((id) => (
+          <span
+            key={id}
+            className="pointer-events-none absolute left-1/2 top-0 animate-float-up whitespace-nowrap font-display text-sm font-bold text-primary drop-shadow-[0_0_8px_rgb(var(--primary))]"
+            aria-hidden="true"
+          >
+            {fmt(t.fx.xp, { n: 10 })}
+          </span>
+        ))}
+      </span>
       <button
         type="button"
         onClick={() => toggle("bookmark")}

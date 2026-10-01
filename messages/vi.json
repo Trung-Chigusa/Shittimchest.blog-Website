@@ -48,7 +48,13 @@
     "writeArticle": "Viết bài",
     "statPosts": "Bài viết",
     "statMembers": "Thành viên",
-    "statTopics": "Chủ đề"
+    "statTopics": "Chủ đề",
+    "menu": [
+      { "title": "Kho tri thức", "sub": "Đọc writeup, lab và ghi chú" },
+      { "title": "Writeup CTF", "sub": "Lời giải từng bước, có tư duy" },
+      { "title": "Viết bài", "sub": "Chia sẻ điều bạn vừa học" },
+      { "title": "Tham gia", "sub": "Tạo tài khoản miễn phí" }
+    ]
   },
   "home": {
     "featuredEyebrow": "Mới nhất",
@@ -287,6 +293,35 @@
   "error": {
     "title": "Có lỗi xảy ra",
     "body": "Không tải được nội dung. Vui lòng thử lại."
+  },
+  "fx": {
+    "sound": "Âm thanh giao diện",
+    "booting": "Đang đồng bộ Resonance",
+    "bootLines": ["Khởi tạo liên kết…", "Tải kho tri thức…", "Hiệu chỉnh tần số…", "Đồng bộ hoàn tất."],
+    "skip": "Nhấn phím bất kỳ để bỏ qua",
+    "shortcuts": "Phím tắt",
+    "shortcutList": [
+      ["/", "Tìm kiếm bài viết"],
+      ["G  H", "Về trang chủ"],
+      ["G  B", "Mở blog"],
+      ["G  D", "Bảng điều khiển"],
+      ["?", "Bật/tắt bảng phím tắt"],
+      ["Esc", "Đóng"]
+    ],
+    "xp": "+{n} XP",
+    "level": "Cấp Resonance",
+    "nextLevel": "Còn {n} XP để lên cấp",
+    "xpRules": "Đăng bài +100 · Nhận tim +10 · Nhận bình luận +5",
+    "rarity": "Độ hiếm",
+    "menuHint": "Chọn hành trình",
+    "elements": {
+      "spectro": "Quang phổ",
+      "havoc": "Hỗn loạn",
+      "aero": "Khí động",
+      "electro": "Điện từ",
+      "fusion": "Nhiệt hạch",
+      "glacio": "Băng tinh"
+    }
   },
   "errors": {
     "INVALID_CREDENTIALS": "Email hoặc mật khẩu không đúng.",

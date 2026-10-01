@@ -57,8 +57,8 @@ function Dialog({ title, body, confirmLabel, cancelLabel, tone = "danger", input
           <span
             className={
               tone === "danger"
-                ? "grid h-10 w-10 shrink-0 place-items-center rounded-full bg-danger/10 text-danger"
-                : "grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"
+                ? "cut-sm grid h-10 w-10 shrink-0 place-items-center border border-danger/40 bg-danger/10 text-danger"
+                : "cut-sm grid h-10 w-10 shrink-0 place-items-center border border-primary/40 bg-primary/10 text-primary"
             }
           >
             <AlertTriangle className="h-5 w-5" />

@@ -48,7 +48,13 @@
     "writeArticle": "記事を書く",
     "statPosts": "記事",
     "statMembers": "メンバー",
-    "statTopics": "トピック"
+    "statTopics": "トピック",
+    "menu": [
+      { "title": "アーカイブ", "sub": "writeup・ラボ・ノート" },
+      { "title": "CTF writeup", "sub": "ステップごとの解説" },
+      { "title": "記事を書く", "sub": "学んだことを共有" },
+      { "title": "参加する", "sub": "無料アカウントを作成" }
+    ]
   },
   "home": {
     "featuredEyebrow": "最新",
@@ -287,6 +293,35 @@
   "error": {
     "title": "エラーが発生しました",
     "body": "コンテンツを読み込めませんでした。もう一度お試しください。"
+  },
+  "fx": {
+    "sound": "インターフェース音",
+    "booting": "共鳴を同期中",
+    "bootLines": ["リンクを確立中…", "ナレッジを読み込み中…", "周波数を調整中…", "同期完了。"],
+    "skip": "任意のキーでスキップ",
+    "shortcuts": "キーボードショートカット",
+    "shortcutList": [
+      ["/", "記事を検索"],
+      ["G  H", "ホームへ"],
+      ["G  B", "ブログを開く"],
+      ["G  D", "ダッシュボード"],
+      ["?", "このパネルを切り替え"],
+      ["Esc", "閉じる"]
+    ],
+    "xp": "+{n} XP",
+    "level": "共鳴レベル",
+    "nextLevel": "次のレベルまで {n} XP",
+    "xpRules": "投稿 +100 · いいね獲得 +10 · コメント獲得 +5",
+    "rarity": "レアリティ",
+    "menuHint": "進む道を選ぶ",
+    "elements": {
+      "spectro": "回折",
+      "havoc": "消滅",
+      "aero": "気動",
+      "electro": "電導",
+      "fusion": "焦熱",
+      "glacio": "凝縮"
+    }
   },
   "errors": {
     "INVALID_CREDENTIALS": "メールアドレスまたはパスワードが正しくありません。",

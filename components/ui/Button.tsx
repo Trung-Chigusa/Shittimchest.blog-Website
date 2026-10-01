@@ -5,18 +5,20 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "soft";
 type ButtonSize = "sm" | "md" | "lg" | "icon";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-primary-fg shadow-sm hover:bg-primary/90 hover:shadow-glow",
-  secondary: "border border-line bg-surface text-fg shadow-sm hover:border-primary/40 hover:bg-surface-2",
-  soft: "bg-primary-soft text-primary hover:bg-primary/15",
-  ghost: "text-muted hover:bg-surface-2 hover:text-fg",
-  danger: "bg-danger/10 text-danger hover:bg-danger hover:text-white",
+  primary:
+    "cut-sm bg-primary text-primary-fg shadow-[0_0_24px_-6px_rgb(var(--primary)/0.7)] hover:bg-[#ffe3a3] hover:shadow-[0_0_30px_-4px_rgb(var(--primary)/0.9)]",
+  secondary:
+    "border border-fg/25 bg-surface/60 text-fg backdrop-blur hover:border-primary hover:text-primary hover:bg-primary/[0.06]",
+  soft: "border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary/60",
+  ghost: "text-muted hover:bg-fg/[0.05] hover:text-fg",
+  danger: "border border-danger/40 bg-danger/10 text-danger hover:bg-danger hover:text-white",
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: "h-8 gap-1.5 rounded-lg px-3 text-xs",
-  md: "h-10 gap-2 rounded-xl px-4 text-sm",
-  lg: "h-12 gap-2 rounded-xl px-6 text-[0.9375rem]",
-  icon: "h-9 w-9 rounded-lg",
+  sm: "h-8 gap-1.5 px-3.5 text-[0.7rem]",
+  md: "h-10 gap-2 px-5 text-[0.75rem]",
+  lg: "h-12 gap-2.5 px-7 text-[0.8rem]",
+  icon: "h-9 w-9",
 };
 
 /** Shared classes so links can look like buttons without nesting <button> in <a>. */
@@ -26,7 +28,7 @@ export function buttonClasses({
   className,
 }: { variant?: ButtonVariant; size?: ButtonSize; className?: string } = {}) {
   return cn(
-    "inline-flex shrink-0 items-center justify-center whitespace-nowrap font-semibold transition duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0",
+    "group relative inline-flex shrink-0 items-center justify-center overflow-hidden whitespace-nowrap font-display font-bold uppercase tracking-[0.16em] transition duration-200 active:translate-y-px disabled:pointer-events-none disabled:opacity-45 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0",
     variants[variant],
     sizes[size],
     className,

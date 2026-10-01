@@ -50,16 +50,20 @@ export function PostFilters({ categories, tags }: { categories: Option[]; tags: 
           <label htmlFor="blog-search" className="sr-only">
             {t.blog.search}
           </label>
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
           <input
             id="blog-search"
             type="search"
             value={search}
+            autoFocus={params.get("focus") === "search"}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t.blog.searchPlaceholder}
             maxLength={80}
-            className="h-11 w-full rounded-xl bg-surface-2 pl-10 pr-10 text-sm text-fg outline-none transition placeholder:text-subtle focus:bg-surface focus:ring-4 focus:ring-primary/15"
+            className="h-11 w-full border border-transparent bg-bg/60 pl-10 pr-16 text-sm text-fg outline-none transition placeholder:text-subtle focus:border-primary/60 focus:shadow-[0_0_20px_-6px_rgb(var(--primary)/0.6)]"
           />
+          {!search && !pending ? (
+            <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 border border-line px-1.5 font-mono text-[10px] text-subtle sm:block">/</kbd>
+          ) : null}
           {pending ? (
             <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
           ) : search ? (
@@ -115,7 +119,7 @@ export function PostFilters({ categories, tags }: { categories: Option[]; tags: 
           <Link
             href={pathname}
             scroll={false}
-            className="inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium text-danger transition hover:bg-danger/10"
+            className="inline-flex shrink-0 items-center gap-1 px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-[0.12em] text-danger transition hover:bg-danger/10"
           >
             <X className="h-3.5 w-3.5" />
             {t.blog.clearFilters}
@@ -133,10 +137,10 @@ function Chip({ href, active, children }: { href: string; active: boolean; child
       scroll={false}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition",
+        "cut-sm shrink-0 border px-3.5 py-1.5 font-display text-xs font-semibold uppercase tracking-[0.12em] transition",
         active
-          ? "border-primary bg-primary text-primary-fg shadow-sm"
-          : "border-line bg-surface text-muted hover:border-primary/40 hover:text-fg",
+          ? "border-primary bg-primary text-primary-fg shadow-[0_0_18px_-4px_rgb(var(--primary)/0.7)]"
+          : "border-line bg-surface/70 text-muted hover:border-primary/60 hover:text-primary",
       )}
     >
       {children}
