@@ -125,7 +125,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             ))}
           </dl>
 
-          <div className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-subtle sm:flex" aria-hidden="true">
+          <div className="absolute bottom-6 right-8 hidden flex-col items-center gap-2 text-subtle lg:flex" aria-hidden="true">
             <span className="font-display text-[0.6rem] uppercase tracking-[0.4em]">Scroll</span>
             <span className="h-10 w-px animate-pulse bg-gradient-to-b from-primary to-transparent" />
           </div>
