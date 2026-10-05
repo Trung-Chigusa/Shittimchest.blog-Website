@@ -2,8 +2,17 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const locales = ["vi", "en", "ja"];
 
+// Any path segment starting with a dot (.env, .git, .gitkeep…), except /.well-known
+const DOTFILE = /(^|\/)\.(?!well-known(\/|$))/;
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Hidden files are never meant to be served; answer 404 instead of letting the
+  // static file handler error out on them.
+  if (DOTFILE.test(pathname)) {
+    return new NextResponse("Not found", { status: 404 });
+  }
 
   if (
     pathname.startsWith("/api") ||

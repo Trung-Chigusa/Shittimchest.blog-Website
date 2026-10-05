@@ -1,4 +1,8 @@
 import { isValidElement } from "react";
+import dockerfile from "highlight.js/lib/languages/dockerfile";
+import http from "highlight.js/lib/languages/http";
+import nginx from "highlight.js/lib/languages/nginx";
+import { common } from "lowlight";
 import ReactMarkdown, { type Components } from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSanitize from "rehype-sanitize";
@@ -36,6 +40,9 @@ function rehypeHeadingIds() {
   };
 }
 
+// The default set plus the formats security writeups use all the time.
+const languages = { ...common, http, nginx, dockerfile };
+
 const components: Components = {
   pre({ children }) {
     const child = Array.isArray(children) ? children[0] : children;
@@ -51,6 +58,14 @@ const components: Components = {
       </a>
     );
   },
+  // Framed, full-width tables that scroll sideways on small screens instead of breaking the layout
+  table({ children }) {
+    return (
+      <div className="card my-7 overflow-x-auto">
+        <table className="!my-0 w-full min-w-[32rem] text-sm">{children}</table>
+      </div>
+    );
+  },
   img({ src, alt }) {
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={typeof src === "string" ? src : undefined} alt={alt ?? ""} loading="lazy" />;
@@ -62,7 +77,7 @@ export function MarkdownRenderer({ content, className }: { content: string; clas
     <div className={cn("prose prose-blog", className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeSanitize, rehypeHeadingIds, rehypeHighlight]}
+        rehypePlugins={[rehypeSanitize, rehypeHeadingIds, [rehypeHighlight, { languages }]]}
         components={components}
       >
         {content}

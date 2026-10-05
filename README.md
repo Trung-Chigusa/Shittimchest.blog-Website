@@ -31,6 +31,33 @@ lib/                   auth, csrf, db, i18n, format, validators, permissions…
 prisma/                schema, migrations, seed
 ```
 
+## Nội dung: series bài viết
+
+Các series được viết bằng Markdown (có front matter) trong `content/` và đăng bằng một script chạy lại được nhiều lần:
+
+```
+content/web-security-101/   10 bài về các lỗi web cần chú ý (SQLi, XSS, CSRF, IDOR, SSRF,
+                            xác thực, upload, command injection, path traversal, misconfig)
+public/images/covers/       ảnh bìa SVG của series (sinh bằng scripts/gen-covers.mjs)
+prisma/publish-content.ts   đọc thư mục series → tạo/cập nhật bài theo slug
+```
+
+```bash
+npm run covers                 # sinh lại ảnh bìa
+npm run content:web101         # đăng/cập nhật series vào database trong DATABASE_URL
+npx tsx prisma/publish-content.ts content/web-security-101 --dry-run   # chỉ kiểm tra
+```
+
+Trên server (database dùng chung nên chỉ cần chạy ở một node):
+
+```bash
+docker compose exec app npx tsx prisma/publish-content.ts content/web-security-101
+```
+
+- Bài đã tồn tại (trùng slug) chỉ được cập nhật nội dung, ảnh bìa, tag; **giữ nguyên** lượt xem, ngày đăng, tác giả.
+- Tác giả là `CONTENT_AUTHOR_EMAIL` nếu có, nếu không là tài khoản ADMIN lâu đời nhất.
+- Mục "Series …" ở cuối mỗi bài được script tự sinh; sửa bài trong file `.md` rồi chạy lại script thay vì sửa trên giao diện.
+
 ## Chạy local
 
 ```bash
@@ -89,6 +116,7 @@ Biến môi trường tuỳ chọn cho seed: `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PAS
 
 - Đổi `AUTH_SECRET`, `JWT_SECRET`, `SMTP_PASS`, mật khẩu PostgreSQL trước khi public.
 - Đổi mật khẩu tài khoản admin mặc định nếu vẫn còn dùng.
+- Ảnh upload được phục vụ qua route `app/uploads/[name]` (đọc từ đĩa) vì `next start` không phục vụ file thêm vào `public/` sau khi khởi động. Upload kiểm tra cả loại file lẫn magic bytes.
 - Ảnh upload nằm trong volume Docker của từng node. Với 2 node, upload và `/uploads` phải cùng đi về một node (WAF có upstream `wanna_upload_backend` cho việc này) hoặc dùng storage chung (NFS/S3).
 - Rate limit hiện lưu in-memory theo từng node; nếu public lớn nên chuyển sang Redis.
 

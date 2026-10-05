@@ -57,7 +57,14 @@ export const postInputSchema = z.object({
   slug: slugSchema.optional().or(z.literal("")),
   excerpt: z.string().max(300),
   content: z.string().min(1),
-  coverImage: z.string().url().or(z.string().startsWith("/uploads/")).optional().or(z.literal("")),
+  // Absolute URL, an uploaded file, or bundled artwork under /images (used by series covers)
+  coverImage: z
+    .string()
+    .url()
+    .or(z.string().startsWith("/uploads/"))
+    .or(z.string().regex(/^\/images\/[\w./-]+$/))
+    .optional()
+    .or(z.literal("")),
   categoryId: z.string().min(1),
   tags: z.array(z.string().min(1).max(32)).max(10).default([]),
   language: z.enum(["vi", "en", "ja"]).default("vi"),

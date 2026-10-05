@@ -42,4 +42,22 @@ describe("Zod validators", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("accepts URL, upload and bundled covers but not arbitrary local paths", () => {
+    const withCover = (coverImage: string) =>
+      postInputSchema.safeParse({
+        title: "Valid cyber note",
+        excerpt: "short",
+        content: "body",
+        categoryId: "cat",
+        coverImage,
+      }).success;
+
+    expect(withCover("https://example.com/cover.png")).toBe(true);
+    expect(withCover("/uploads/bd7675bc-f82d-4120-af98-f786419ab900.png")).toBe(true);
+    expect(withCover("/images/covers/web101-01-sqli.svg")).toBe(true);
+    expect(withCover("")).toBe(true);
+    expect(withCover("/etc/passwd")).toBe(false);
+    expect(withCover("/images/<script>")).toBe(false);
+  });
 });

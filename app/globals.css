@@ -306,12 +306,24 @@
     @apply border border-line;
   }
 
-  .prose-blog :where(table) {
-    @apply block overflow-x-auto text-sm;
+  .prose-blog :where(thead) {
+    @apply border-b border-line bg-primary/[0.07];
   }
 
   .prose-blog :where(thead th) {
-    @apply font-display uppercase tracking-wider text-primary;
+    @apply whitespace-nowrap px-4 py-3 font-display text-xs uppercase tracking-[0.14em] text-primary;
+  }
+
+  .prose-blog :where(tbody td) {
+    @apply px-4 py-3 align-top leading-relaxed;
+  }
+
+  .prose-blog :where(tbody tr) {
+    @apply transition-colors hover:bg-fg/[0.03];
+  }
+
+  .prose-blog :where(tbody td:first-child) {
+    @apply font-medium text-fg;
   }
 }
 
